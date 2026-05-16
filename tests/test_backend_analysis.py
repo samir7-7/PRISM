@@ -53,10 +53,10 @@ def test_is_demo_unparseable_repo():
     "score, expected",
     [
         (0, "LOW"),
-        (40, "LOW"),
-        (41, "MEDIUM"),
-        (70, "MEDIUM"),
-        (71, "HIGH"),
+        (33, "LOW"),
+        (34, "MEDIUM"),
+        (66, "MEDIUM"),
+        (67, "HIGH"),
         (100, "HIGH"),
     ],
 )

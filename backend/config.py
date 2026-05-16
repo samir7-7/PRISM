@@ -19,13 +19,13 @@ class Settings(BaseSettings):
     )
 
     # GitHub Configuration
-    github_token: str
+    github_token: str = ""
     github_api_url: str = "https://api.github.com"
     
     # IBM watsonx.ai Configuration
-    ibm_bob_api_key: str
+    ibm_bob_api_key: str = ""
     ibm_bob_api_url: str = "https://us-south.ml.cloud.ibm.com"
-    ibm_bob_project_id: str
+    ibm_bob_project_id: str = ""
     ibm_bob_model_id: str = "ibm/granite-13b-chat-v2"
     
     # Database Configuration

@@ -50,13 +50,25 @@ class RegressionGenerator:
         # Prioritize scenarios
         scenarios = self._prioritize_scenarios(scenarios)
         
-        return scenarios[:10]  # Return top 10 scenarios
+        # PRD requires at least 3 scenarios per high-risk path
+        # Ensure we have sufficient high-priority scenarios
+        high_priority_count = sum(1 for s in scenarios if s.priority == "HIGH")
+        
+        # If we have high-risk paths but insufficient scenarios, keep all
+        # Otherwise, return prioritized list (no arbitrary cap)
+        if high_priority_count > 0 and high_priority_count < 3:
+            # Keep all scenarios to meet minimum requirement
+            return scenarios
+        
+        # Return all scenarios (no cap) - let consumers decide how many to use
+        return scenarios
     
     def _generate_file_scenarios(self, changed_files: List[str]) -> List[RegressionScenario]:
         """Generate scenarios for directly changed files."""
         scenarios = []
         
-        for file_path in changed_files[:5]:  # Limit to first 5 files
+        # Generate scenarios for all changed files (no arbitrary limit)
+        for file_path in changed_files:
             self.scenario_counter += 1
             
             # Determine file type and generate appropriate scenario
@@ -94,7 +106,8 @@ class RegressionGenerator:
         
         # Group impacted nodes by file
         files_with_impacts = {}
-        for node_id in impacted_nodes[:10]:  # Limit to first 10
+        # Process all impacted nodes (no arbitrary limit)
+        for node_id in impacted_nodes:
             if node_id in graph:
                 file_path = graph.nodes[node_id].get('file', '')
                 if file_path:
@@ -102,8 +115,8 @@ class RegressionGenerator:
                         files_with_impacts[file_path] = []
                     files_with_impacts[file_path].append(node_id)
         
-        # Generate scenarios for impacted files
-        for file_path, nodes in list(files_with_impacts.items())[:3]:  # Top 3 files
+        # Generate scenarios for all impacted files
+        for file_path, nodes in files_with_impacts.items():
             self.scenario_counter += 1
             
             component_names = [

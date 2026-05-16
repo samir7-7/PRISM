@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Literal
 
 import httpx
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from .errors import (
     AuthError,
@@ -28,9 +28,9 @@ class AnalysisResponse(BaseModel):
 
     report_id: str
     dashboard_url: str
-    risk_score: int
+    risk_score: int = Field(..., ge=0, le=100, description="Risk score (0-100)")
     risk_label: Literal["LOW", "MEDIUM", "HIGH"]
-    impacted_node_count: int
+    impacted_node_count: int = Field(..., ge=0, description="Number of impacted nodes")
     status: Literal["COMPLETE", "PARTIAL"]
 
 

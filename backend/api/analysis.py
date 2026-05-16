@@ -6,22 +6,15 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
 
-import hashlib
-
 from backend.db import get_db
 from backend.schemas.analysis import AnalyzeRequest, AnalyzeResponse, AnalysisError, AnalysisResponse
 from backend.services.analysis_pipeline import AnalysisPipeline
 from backend.repositories.report_repository import ReportRepository
+from backend import analysis as backend_analysis
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["analysis"])
-
-
-def make_report_id(pr_id: str, repo_url: str) -> str:
-    """Build a deterministic 8-char report_id from the request."""
-    digest = hashlib.sha1(f"{repo_url}#{pr_id}".encode()).hexdigest()
-    return digest[:8]
 
 
 @router.post("/analysis/run", response_model=AnalysisResponse)
@@ -30,50 +23,87 @@ async def analyze_pr_contract(
     db: Session = Depends(get_db)
 ):
     """
-    Polished CLI entry point - Analyze a PR and return a contract-matching response.
+    CLI entry point - Analyze a PR using the full semantic analysis pipeline.
+    
+    This endpoint runs the complete analysis pipeline:
+    - Fetches PR diff from GitHub
+    - Performs AST analysis
+    - Builds dependency graph
+    - Identifies impacted components
+    - Calculates risk score
+    - Gets IBM Bob semantic insights
+    - Generates regression scenarios
+    
+    Returns PARTIAL status on pipeline failures instead of 500 errors.
+    Supports demo passthrough for reliable demo experience.
     """
     try:
         logger.info(f"Received analysis request from CLI for PR {request.pr_identifier}")
         
-        # Execute analysis pipeline
+        # Check for demo PR - return canned response instantly
+        if backend_analysis.is_demo(request.pr_identifier, request.repository_url):
+            logger.info("Demo PR detected, returning canned response")
+            return AnalysisResponse(**backend_analysis.DEMO_RESPONSE)
+        
+        # Execute full analysis pipeline
         pipeline = AnalysisPipeline()
         result = await pipeline.analyze_pr(
             pr_id=request.pr_identifier,
             repository=request.repository_url
         )
         
+        # Generate deterministic report ID
+        report_id = backend_analysis.make_report_id(request.pr_identifier, request.repository_url)
+        dashboard_url = f"http://localhost:3000/report/{report_id}"
+        
         # Store results in database
         repo = ReportRepository(db)
-        report = repo.create_report(result)
+        db_report = repo.create_report(result)
         
-        # Map IBM BOB internal levels to CLI expected levels
-        level_map = {
-            'CRITICAL': 'HIGH',
-            'HIGH': 'HIGH',
-            'MEDIUM': 'MEDIUM',
-            'LOW': 'LOW',
-            'UNKNOWN': 'LOW'
-        }
+        # Check if pipeline returned failed status
+        if result.get("status") == "failed":
+            logger.warning(f"Analysis pipeline failed for PR {request.pr_identifier}, returning PARTIAL")
+            return AnalysisResponse(
+                report_id=report_id,
+                dashboard_url=dashboard_url,
+                risk_score=0,
+                risk_label="LOW",
+                impacted_node_count=0,
+                status="PARTIAL"
+            )
         
-        # Convert to response model matching Prism CLI contract
+        # Convert pipeline result to CLI contract response
         response = AnalysisResponse(
-            report_id=make_report_id(request.pr_identifier, request.repository_url),
-            dashboard_url=f"http://localhost:3000/report/{make_report_id(request.pr_identifier, request.repository_url)}",
-            risk_score=int(result['risk_score']),
-            risk_label=level_map.get(result['risk_level'], 'LOW'),
-            impacted_node_count=len(result['impacted_nodes']),
-            status="COMPLETE" if result['status'] == 'completed' else "PARTIAL"
+            report_id=report_id,
+            dashboard_url=dashboard_url,
+            risk_score=int(result["risk_score"]),
+            risk_label=result["risk_level"],
+            impacted_node_count=len(result.get("impacted_nodes", [])),
+            status="COMPLETE" if result.get("status") == "completed" else "PARTIAL"
         )
         
-        logger.info(f"Analysis completed for CLI. Report ID: {response.report_id}")
+        logger.info(f"Analysis completed for CLI. Report ID: {response.report_id}, Status: {response.status}")
         return response
         
     except Exception as e:
         logger.error(f"Analysis failed for CLI: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Analysis failed: {str(e)}"
+        # Return PARTIAL response instead of 500 error
+        logger.warning(f"Returning PARTIAL response due to exception: {str(e)}")
+        
+        # Generate fallback report ID and dashboard URL
+        report_id = backend_analysis.make_report_id(request.pr_identifier, request.repository_url)
+        dashboard_url = f"http://localhost:3000/report/{report_id}"
+        
+        response = AnalysisResponse(
+            report_id=report_id,
+            dashboard_url=dashboard_url,
+            risk_score=0,
+            risk_label="LOW",
+            impacted_node_count=0,
+            status="PARTIAL"
         )
+        
+        return response
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
@@ -105,22 +135,22 @@ async def analyze_pr(
         HTTPException: If analysis fails
     """
     try:
-        logger.info(f"Received analysis request for PR {request.pr_id} in {request.repository}")
+        logger.info(f"Received analysis request for PR {request.pr_identifier} in {request.repository_url}")
         
         # Execute analysis pipeline
         pipeline = AnalysisPipeline()
         result = await pipeline.analyze_pr(
-            pr_id=request.pr_id,
-            repository=request.repository
+            pr_id=request.pr_identifier,
+            repository=request.repository_url
         )
         
         # Store results in database
         repo = ReportRepository(db)
-        report = repo.create_report(result)
+        db_report = repo.create_report(result)
         
         # Convert to response model
         response = AnalyzeResponse(
-            report_id=report.id,
+            report_id=db_report.id,  # type: ignore
             pr_id=result['pr_id'],
             repository=result['repository'],
             pr_url=result.get('pr_url'),
@@ -135,7 +165,7 @@ async def analyze_pr(
             created_at=result['created_at']
         )
         
-        logger.info(f"Analysis completed successfully. Report ID: {report.id}")
+        logger.info(f"Analysis completed successfully. Report ID: {db_report.id}")
         return response
         
     except Exception as e:
@@ -175,7 +205,7 @@ async def get_analysis_status(
         "status": report.status,
         "pr_id": report.pr_id,
         "repository": report.repository,
-        "created_at": report.created_at.isoformat() + 'Z' if report.created_at else None,
+        "created_at": report.created_at.isoformat() + 'Z' if report.created_at is not None else None,
         "risk_level": report.risk_level,
         "error_message": report.error_message
     }
@@ -209,8 +239,8 @@ async def analyze_multiple_prs(
         # Add to background tasks
         # Note: This is a simplified approach
         queued.append({
-            "pr_id": req.pr_id,
-            "repository": req.repository,
+            "pr_id": req.pr_identifier,
+            "repository": req.repository_url,
             "status": "queued"
         })
     

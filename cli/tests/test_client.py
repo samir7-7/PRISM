@@ -52,7 +52,7 @@ def test_analysis_response_validation_risk_score():
 def test_health_check_success(mock_httpx_client_success):
     """Test successful health check."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_success)
+    client._client = httpx.Client(transport=mock_httpx_client_success)
     
     assert client.check_health() is True
     
@@ -62,7 +62,7 @@ def test_health_check_success(mock_httpx_client_success):
 def test_health_check_failure(mock_httpx_client_backend_down):
     """Test health check when backend is down."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_backend_down)
+    client._client = httpx.Client(transport=mock_httpx_client_backend_down)
     
     assert client.check_health() is False
     
@@ -72,7 +72,7 @@ def test_health_check_failure(mock_httpx_client_backend_down):
 def test_run_analysis_success(mock_httpx_client_success, mock_analysis_response):
     """Test successful analysis request."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_success)
+    client._client = httpx.Client(transport=mock_httpx_client_success)
     
     response = client.run(
         pr_identifier="pr-142",
@@ -91,7 +91,7 @@ def test_run_analysis_success(mock_httpx_client_success, mock_analysis_response)
 def test_run_analysis_without_token(mock_httpx_client_success):
     """Test analysis request without GitHub token."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_success)
+    client._client = httpx.Client(transport=mock_httpx_client_success)
     
     response = client.run(
         pr_identifier="pr-142",
@@ -107,7 +107,7 @@ def test_run_analysis_without_token(mock_httpx_client_success):
 def test_run_analysis_backend_unreachable(mock_httpx_client_backend_down):
     """Test analysis when backend is unreachable."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_backend_down)
+    client._client = httpx.Client(transport=mock_httpx_client_backend_down)
     
     with pytest.raises(BackendUnreachable) as exc_info:
         client.run(
@@ -123,7 +123,7 @@ def test_run_analysis_backend_unreachable(mock_httpx_client_backend_down):
 def test_run_analysis_timeout(mock_httpx_client_timeout):
     """Test analysis when request times out."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_timeout)
+    client._client = httpx.Client(transport=mock_httpx_client_timeout)
     
     with pytest.raises(BackendTimeout) as exc_info:
         client.run(
@@ -139,7 +139,7 @@ def test_run_analysis_timeout(mock_httpx_client_timeout):
 def test_run_analysis_auth_error(mock_httpx_client_auth_error):
     """Test analysis with authentication error."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_auth_error)
+    client._client = httpx.Client(transport=mock_httpx_client_auth_error)
     
     with pytest.raises(AuthError) as exc_info:
         client.run(
@@ -156,7 +156,7 @@ def test_run_analysis_auth_error(mock_httpx_client_auth_error):
 def test_run_analysis_not_found(mock_httpx_client_not_found):
     """Test analysis when PR is not found."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_not_found)
+    client._client = httpx.Client(transport=mock_httpx_client_not_found)
     
     with pytest.raises(NotFoundError) as exc_info:
         client.run(
@@ -172,7 +172,7 @@ def test_run_analysis_not_found(mock_httpx_client_not_found):
 def test_run_analysis_server_error(mock_httpx_client_server_error):
     """Test analysis when backend returns server error."""
     client = AnalysisClient("http://localhost:8000", timeout=60)
-    client.client = httpx.Client(transport=mock_httpx_client_server_error)
+    client._client = httpx.Client(transport=mock_httpx_client_server_error)
     
     with pytest.raises(BackendServerError) as exc_info:
         client.run(
@@ -188,7 +188,7 @@ def test_run_analysis_server_error(mock_httpx_client_server_error):
 def test_client_context_manager(mock_httpx_client_success):
     """Test AnalysisClient as context manager."""
     with AnalysisClient("http://localhost:8000", timeout=60) as client:
-        client.client = httpx.Client(transport=mock_httpx_client_success)
+        client._client = httpx.Client(transport=mock_httpx_client_success)
         assert client.check_health() is True
     
     # Client should be closed after context

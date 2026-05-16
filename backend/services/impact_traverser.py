@@ -18,6 +18,9 @@ class ImpactTraverser:
         Find all nodes impacted by changes to the given nodes.
         Uses BFS to traverse the dependency graph.
         
+        Graph convention: edge B→A means "B depends on A"
+        So when A changes, we find nodes that point TO A (predecessors)
+        
         Args:
             changed_nodes: List of node IDs that were changed
             
@@ -33,7 +36,7 @@ class ImpactTraverser:
         while queue:
             current = queue.popleft()
             
-            # Get all nodes that depend on the current node (predecessors)
+            # Get all nodes that depend on the current node (predecessors in this graph convention)
             for predecessor in self.graph.predecessors(current):
                 if predecessor not in visited:
                     visited.add(predecessor)
@@ -84,7 +87,7 @@ class ImpactTraverser:
         while queue:
             current, depth = queue.popleft()
             
-            # Get all nodes that depend on the current node
+            # Get all nodes that depend on the current node (predecessors in this graph convention)
             for predecessor in self.graph.predecessors(current):
                 if predecessor not in visited:
                     visited.add(predecessor)
@@ -94,13 +97,17 @@ class ImpactTraverser:
         return depths
     
     def get_impact_paths(
-        self, 
-        source_node: str, 
-        target_node: str, 
+        self,
+        source_node: str,
+        target_node: str,
         max_paths: int = 5
     ) -> List[List[str]]:
         """
         Find paths from a changed node to an impacted node.
+        
+        Graph convention: edge B→A means "B depends on A"
+        To find impact paths from A to B, we need to reverse the graph
+        because nx.all_simple_paths follows edge direction.
         
         Args:
             source_node: Changed node ID
@@ -111,10 +118,15 @@ class ImpactTraverser:
             List of paths (each path is a list of node IDs)
         """
         try:
+            # Reverse the graph to follow impact direction
+            # In original: B→A (B depends on A)
+            # In reversed: A→B (A impacts B)
+            reversed_graph = self.graph.reverse()
+            
             # Find all simple paths (no cycles)
             paths = list(nx.all_simple_paths(
-                self.graph, 
-                source=source_node, 
+                reversed_graph,
+                source=source_node,
                 target=target_node,
                 cutoff=10  # Limit path length to avoid infinite loops
             ))

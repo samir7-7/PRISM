@@ -227,17 +227,20 @@ class RiskScorer:
         """
         Determine risk level category from score.
         
+        Uses 3-tier system as defined in TECH SPEC:
+        - LOW: 0-33
+        - MEDIUM: 34-66
+        - HIGH: 67-100
+        
         Args:
             score: Risk score (0-100)
             
         Returns:
-            Risk level: LOW, MEDIUM, HIGH, or CRITICAL
+            Risk level: LOW, MEDIUM, or HIGH
         """
-        if score >= 75:
-            return 'CRITICAL'
-        elif score >= 50:
+        if score >= 67:
             return 'HIGH'
-        elif score >= 25:
+        elif score >= 34:
             return 'MEDIUM'
         else:
             return 'LOW'

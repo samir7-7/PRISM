@@ -54,25 +54,58 @@ class IBMBobClient:
         changed_files: list,
         impacted_components: list
     ) -> str:
-        """Build the prompt for IBM watsonx.ai."""
-        prompt = f"""You are a senior software engineer reviewing a code change. Analyze the following pull request and provide insights on potential risks and recommendations.
+        """
+        Build a semantic-focused prompt for IBM watsonx.ai.
+        
+        This prompt is specifically designed to identify semantic risks:
+        - Behavioral changes that break downstream assumptions
+        - Enum/constant changes that affect dependent services
+        - API contract changes that impact consumers
+        - State transition changes that violate expectations
+        """
+        # Format impacted components with context
+        impacted_list = '\n'.join([f"  - {comp}" for comp in impacted_components[:20]])
+        
+        prompt = f"""You are a semantic risk analyzer for code changes. Your goal is to identify BEHAVIORAL risks, not syntax errors.
 
-Changed Files:
-{', '.join(changed_files[:10])}  # Limit to first 10 files
+CONTEXT:
+This is a pull request in a microservices architecture where services communicate via events and APIs.
 
-Impacted Components:
-{', '.join(impacted_components[:15])}  # Limit to first 15 components
+CHANGED FILES:
+{', '.join(changed_files[:10])}
 
-Change Summary:
-{diff_summary}
+DEPENDENCY GRAPH ANALYSIS:
+The following components are downstream dependencies that may be affected:
+{impacted_list}
 
-Please provide:
-1. Semantic risks: What could break due to these changes?
-2. Hidden dependencies: Are there non-obvious components that might be affected?
-3. Testing recommendations: What specific scenarios should be tested?
-4. Deployment considerations: Any special considerations for deploying this change?
+CODE CHANGES:
+{diff_summary[:1500]}  # Include actual diff content
 
-Keep your response concise and actionable (max 300 words).
+SEMANTIC RISK ANALYSIS REQUIRED:
+
+1. **Behavioral Contract Violations**
+   - Are there enum/constant value changes that downstream services depend on?
+   - Are there API response field renames that consumers still reference?
+   - Are there state transition changes that violate assumptions?
+
+2. **Hidden Assumption Breaks**
+   - Which impacted components make assumptions about the changed code's behavior?
+   - Are there timing, ordering, or state assumptions that could break?
+   - Are there data format expectations that changed?
+
+3. **Cross-Service Impact**
+   - Which downstream services will fail silently vs fail loudly?
+   - Are there event consumers that expect specific field names or values?
+   - Are there analytics or monitoring systems that depend on specific states?
+
+4. **Regression Scenarios**
+   - What specific test cases would catch these semantic breaks?
+   - What edge cases arise from the behavioral change?
+
+RESPONSE FORMAT:
+Provide a structured analysis focusing on SEMANTIC risks (behavioral breaks), not syntactic issues.
+Be specific about which downstream components are at risk and why.
+Limit response to 400 words, prioritize highest-risk findings.
 """
         return prompt
     
@@ -112,23 +145,47 @@ Keep your response concise and actionable (max 300 words).
             "project_id": self.project_id
         }
         
-        # Make API call
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                endpoint,
-                headers=headers,
-                json=body
-            )
-            response.raise_for_status()
-            
-            # Parse response
-            result = response.json()
-            
-            # Extract generated text
-            if "results" in result and len(result["results"]) > 0:
-                return result["results"][0]["generated_text"].strip()
-            else:
-                return "No analysis generated."
+        # Make API call with retry logic
+        max_retries = 3
+        retry_delay = 1.0  # Start with 1 second
+        
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        endpoint,
+                        headers=headers,
+                        json=body
+                    )
+                    response.raise_for_status()
+                    
+                    # Parse response
+                    result = response.json()
+                    
+                    # Extract generated text
+                    if "results" in result and len(result["results"]) > 0:
+                        return result["results"][0]["generated_text"].strip()
+                    else:
+                        return "No analysis generated."
+                        
+            except (httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                # Check if it's a retryable error
+                if isinstance(e, httpx.HTTPStatusError):
+                    # Retry on 429 (rate limit), 503 (service unavailable), 502 (bad gateway)
+                    if e.response.status_code not in [429, 502, 503]:
+                        raise  # Don't retry on other HTTP errors
+                
+                # Last attempt - raise the error
+                if attempt == max_retries - 1:
+                    raise
+                
+                # Wait before retrying (exponential backoff)
+                import asyncio
+                await asyncio.sleep(retry_delay)
+                retry_delay *= 2  # Double the delay for next attempt
+        
+        # Fallback if all retries exhausted (should not reach here due to raise above)
+        return "Analysis unavailable after retries."
     
     async def generate_test_scenarios(
         self,

@@ -28,17 +28,13 @@ class ASTAnalyzer:
     
     def __init__(self):
         # Initialize parsers for different languages
+        # tree-sitter 0.22+ requires passing language to Parser constructor
+        # TypeScript module has language_typescript() instead of language()
         self.parsers = {
-            'python': self._create_parser(Language(tspython.language())),
-            'javascript': self._create_parser(Language(tsjavascript.language())),
-            'typescript': self._create_parser(Language(tstypescript.language())),
+            'python': Parser(Language(tspython.language())),
+            'javascript': Parser(Language(tsjavascript.language())),
+            'typescript': Parser(Language(tstypescript.language_typescript())),
         }
-    
-    def _create_parser(self, language: Language) -> Parser:
-        """Create a parser for a specific language."""
-        parser = Parser()
-        parser.set_language(language)
-        return parser
     
     def analyze_file(self, file_path: str, content: str) -> List[CodeElement]:
         """

@@ -2,7 +2,7 @@
 Pydantic schemas for analysis requests and responses.
 """
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AnalyzeRequest(BaseModel):
@@ -11,6 +11,26 @@ class AnalyzeRequest(BaseModel):
     pr_identifier: str = Field(..., alias="pr_id", description="Pull request ID or number")
     repository_url: str = Field(..., alias="repository", description="Repository URL or owner/repo")
     github_token: Optional[str] = None
+    
+    @field_validator('repository_url')
+    @classmethod
+    def validate_repository_url(cls, v: str) -> str:
+        """Validate that repository_url is either a valid URL or owner/repo format."""
+        v = v.strip()
+        
+        # Check if it's a valid GitHub URL or owner/repo format
+        if '/' not in v:
+            raise ValueError('repository_url must be a GitHub URL or owner/repo format')
+        
+        # If it contains spaces or other invalid characters, reject it
+        if ' ' in v or '\t' in v or '\n' in v:
+            raise ValueError('repository_url contains invalid characters')
+        
+        # Basic check: if it looks like a URL, it should start with http
+        if '://' in v and not (v.startswith('http://') or v.startswith('https://')):
+            raise ValueError('repository_url must be a valid HTTP(S) URL')
+        
+        return v
     
     class Config:
         populate_by_name = True
@@ -28,9 +48,9 @@ class AnalysisResponse(BaseModel):
     
     report_id: str
     dashboard_url: str
-    risk_score: int
+    risk_score: int = Field(..., ge=0, le=100, description="Risk score (0-100)")
     risk_label: str  # LOW, MEDIUM, HIGH
-    impacted_node_count: int
+    impacted_node_count: int = Field(..., ge=0, description="Number of impacted nodes")
     status: str = "COMPLETE"
 
 
@@ -67,7 +87,7 @@ class AnalyzeResponse(BaseModel):
     changed_files: List[str]
     impacted_nodes: List[str]
     risk_score: float = Field(..., ge=0, le=100, description="Overall risk score (0-100)")
-    risk_level: str = Field(..., description="Risk level: LOW, MEDIUM, HIGH, CRITICAL")
+    risk_level: str = Field(..., description="Risk level: LOW, MEDIUM, HIGH")
     risk_factors: RiskFactors
     
     # IBM Bob insights

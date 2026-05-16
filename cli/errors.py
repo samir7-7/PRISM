@@ -66,3 +66,9 @@ class ConfigError(PrismError):
     """Required configuration was not supplied."""
 
     default_hint = "pass the missing flag or set the env var in .env."
+
+
+class ValidationError(PrismError):
+    """Backend response validation failed (shape mismatch)."""
+
+    default_hint = "backend may be returning unexpected data - check backend version."

@@ -72,8 +72,8 @@ class AnalysisPipeline:
             logger.info("Step 3: Analyzing code structure")
             all_elements = []
             
-            # For hackathon: analyze only changed files (not entire repo)
-            for file_path in changed_files[:10]:  # Limit to 10 files
+            # Analyze all changed files (no arbitrary limit)
+            for file_path in changed_files:
                 try:
                     # Fetch file content
                     content = await self.github_client.get_file_content(
@@ -151,7 +151,7 @@ class AnalysisPipeline:
                 'risk_level': risk_result['risk_level'],
                 'risk_factors': risk_result['risk_factors'],
                 'semantic_insights': semantic_insights,
-                'regression_scenarios': [s.dict() for s in scenarios],
+                'regression_scenarios': [s.model_dump() for s in scenarios],
                 'analysis_duration': round(duration, 2),
                 'created_at': datetime.utcnow().isoformat() + 'Z',
                 'status': 'completed'

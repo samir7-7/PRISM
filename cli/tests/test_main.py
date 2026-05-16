@@ -46,7 +46,8 @@ def test_analyze_help():
     assert "--backend" in result.stdout
     assert "--token" in result.stdout
     assert "--open" in result.stdout
-    assert "--json" in result.stdout
+    # --json is hidden from help output (hidden=True in main.py:68)
+    assert "--json" not in result.stdout
 
 
 def test_analyze_missing_repo_url():
