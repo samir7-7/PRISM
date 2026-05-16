@@ -191,14 +191,26 @@ class GitHubClient:
         Parse repository string into owner and repo name.
         
         Args:
-            repository: Repository in format "owner/repo"
+            repository: Repository in format "owner/repo" or full GitHub URL
             
         Returns:
             Tuple of (owner, repo)
         """
+        # Handle full GitHub URLs
+        if repository.startswith(('http://', 'https://')):
+            # Extract owner/repo from URL
+            # https://github.com/owner/repo or https://github.com/owner/repo.git
+            repository = repository.rstrip('/')
+            if repository.endswith('.git'):
+                repository = repository[:-4]
+            parts = repository.split('/')
+            if len(parts) >= 2:
+                return parts[-2], parts[-1]
+        
+        # Handle owner/repo format
         parts = repository.split("/")
         if len(parts) != 2:
-            raise ValueError(f"Invalid repository format: {repository}. Expected 'owner/repo'")
+            raise ValueError(f"Invalid repository format: {repository}. Expected 'owner/repo' or GitHub URL")
         return parts[0], parts[1]
 
 # Made with Bob

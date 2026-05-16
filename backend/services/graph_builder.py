@@ -12,19 +12,32 @@ class GraphBuilder:
     
     def __init__(self):
         self.graph = nx.DiGraph()
+        self.coverage_complete = True  # Flag for incomplete graph data
     
-    def build_graph(self, elements: List[CodeElement]) -> nx.DiGraph:
+    def build_graph(self, elements: List[CodeElement], has_pre_indexed_data: bool = False) -> nx.DiGraph:
         """
         Build a dependency graph from code elements.
         
         Args:
             elements: List of CodeElement objects from AST analysis
+            has_pre_indexed_data: Whether pre-indexed repository graph data is available
             
         Returns:
-            NetworkX directed graph
+            NetworkX directed graph with coverage metadata
         """
         # Reset graph
         self.graph = nx.DiGraph()
+        
+        # Set coverage flag based on whether we have pre-indexed data
+        # If we're doing on-demand AST traversal only, coverage may be incomplete
+        self.coverage_complete = has_pre_indexed_data
+        
+        # Add coverage metadata to graph
+        self.graph.graph['coverage_complete'] = self.coverage_complete
+        self.graph.graph['coverage_note'] = (
+            "Complete repository analysis" if self.coverage_complete
+            else "On-demand analysis - coverage may be incomplete for unchanged files"
+        )
         
         # Add nodes for all elements
         for element in elements:

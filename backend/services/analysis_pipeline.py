@@ -69,21 +69,25 @@ class AnalysisPipeline:
                 return self._create_empty_result(pr_id, repository, pr_url, start_time)
             
             # Step 3: Analyze code structure with AST
-            logger.info("Step 3: Analyzing code structure")
-            all_elements = []
+            logger.info("Step 3: Analyzing code structure with cross-file dependency resolution")
             
-            # Analyze all changed files (no arbitrary limit)
+            # Fetch all file contents first for cross-file analysis
+            file_contents = {}
             for file_path in changed_files:
                 try:
-                    # Fetch file content
                     content = await self.github_client.get_file_content(
                         owner, repo, file_path, ref=pr_info.get('head', {}).get('sha')
                     )
-                    elements = self.ast_analyzer.analyze_file(file_path, content)
-                    all_elements.extend(elements)
+                    file_contents[file_path] = content
                 except Exception as e:
-                    logger.warning(f"Failed to analyze {file_path}: {e}")
+                    logger.warning(f"Failed to fetch {file_path}: {e}")
                     continue
+            
+            # Analyze all files together to resolve cross-file dependencies
+            if file_contents:
+                all_elements = self.ast_analyzer.analyze_files(file_contents)
+            else:
+                all_elements = []
             
             # Step 4: Build dependency graph
             logger.info("Step 4: Building dependency graph")
