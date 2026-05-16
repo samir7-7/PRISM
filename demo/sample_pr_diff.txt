@@ -1,0 +1,108 @@
+diff --git a/src/data_processor.py b/src/data_processor.py
+index 1234567..abcdefg 100644
+--- a/src/data_processor.py
++++ b/src/data_processor.py
+@@ -1,15 +1,20 @@
+ import json
+ from typing import List, Dict
++from datetime import datetime
+ 
+ class DataProcessor:
+     """Process and validate data from various sources."""
+     
+-    def process_records(self, records: List[Dict]) -> List[Dict]:
++    def process_records(self, records: List[Dict], validate: bool = True) -> List[Dict]:
+         """
+         Process a list of records.
+         
+         Args:
+             records: List of record dictionaries
++            validate: Whether to validate records (default: True)
+             
+         Returns:
+             Processed records
+@@ -17,10 +22,15 @@ class DataProcessor:
+         processed = []
+         
+         for record in records:
+-            if self._validate_record(record):
++            if validate and not self._validate_record(record):
++                continue
++            
++            # Add timestamp
++            record['processed_at'] = datetime.utcnow().isoformat()
++            
++            if self._transform_record(record):
+                 processed.append(record)
+         
+         return processed
+     
+     def _validate_record(self, record: Dict) -> bool:
+@@ -30,6 +40,16 @@ class DataProcessor:
+         if not record.get('id'):
+             return False
+         
++        # New validation: check required fields
++        required_fields = ['id', 'name', 'type']
++        for field in required_fields:
++            if field not in record:
++                return False
++        
+         return True
++    
++    def _transform_record(self, record: Dict) -> bool:
++        """Transform record data."""
++        # Add transformation logic
++        return True
+
+diff --git a/src/api_handler.py b/src/api_handler.py
+index 9876543..fedcba9 100644
+--- a/src/api_handler.py
++++ b/src/api_handler.py
+@@ -1,5 +1,6 @@
+ from flask import Flask, request, jsonify
+ from src.data_processor import DataProcessor
++import logging
+ 
+ app = Flask(__name__)
+ processor = DataProcessor()
+@@ -10,7 +11,12 @@ def process_data():
+     """API endpoint to process data."""
+     data = request.get_json()
+     
+-    results = processor.process_records(data.get('records', []))
++    # Get validation flag from request
++    validate = data.get('validate', True)
++    
++    logging.info(f"Processing {len(data.get('records', []))} records")
++    
++    results = processor.process_records(data.get('records', []), validate=validate)
+     
+     return jsonify({
+         'status': 'success',
+
+diff --git a/tests/test_data_processor.py b/tests/test_data_processor.py
+index 1111111..2222222 100644
+--- a/tests/test_data_processor.py
++++ b/tests/test_data_processor.py
+@@ -15,6 +15,20 @@ class TestDataProcessor:
+         
+         assert len(results) == 2
+     
++    def test_process_records_with_validation_disabled(self):
++        """Test processing with validation disabled."""
++        processor = DataProcessor()
++        
++        records = [
++            {'id': '1', 'name': 'Test'},
++            {'name': 'Invalid'}  # Missing id
++        ]
++        
++        results = processor.process_records(records, validate=False)
++        
++        # Should process all records when validation is disabled
++        assert len(results) == 2
++    
+     def test_validate_record(self):
+         """Test record validation."""
+         processor = DataProcessor()
