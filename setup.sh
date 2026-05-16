@@ -8,7 +8,12 @@ python -m venv venv
 echo "Activating virtual environment..."
 source venv/Scripts/activate
 
-echo "Installing requirements..."
+echo "Installing Python requirements..."
 pip install -r requirements.txt
 
-echo "Done! Virtual environment is ready."
+echo "Installing frontend dependencies..."
+cd frontend/prism
+npm install
+cd ../../
+
+echo "Done! Environment is ready."
