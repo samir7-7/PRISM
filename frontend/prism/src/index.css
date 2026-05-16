@@ -1,51 +1,80 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  * {
-    @apply border-prism-border;
-  }
-  
-  body {
-    @apply bg-prism-bg text-prism-text font-sans antialiased;
-    margin: 0;
-    padding: 0;
-  }
+@theme {
+  --color-prism-bg: #0d1117;
+  --color-prism-surface: #161b22;
+  --color-prism-border: #21262d;
+  --color-prism-orange: #f97316;
+  --color-prism-green: #22c55e;
+  --color-prism-red: #ef4444;
+  --color-prism-yellow: #eab308;
+  --color-prism-blue: #3b82f6;
+  --color-prism-text: #e6edf3;
+  --color-prism-text-muted: #8b949e;
 
-  code {
-    @apply font-mono;
-  }
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-family-sans: 'Inter', system-ui, sans-serif;
 }
 
-@layer utilities {
-  .card {
-    @apply rounded-lg border border-prism-border bg-prism-surface;
-  }
+* {
+  border-color: var(--color-prism-border);
+}
 
-  .badge {
-    @apply uppercase tracking-widest text-[10px] px-2 py-0.5 rounded-sm font-semibold;
-  }
+body {
+  background-color: var(--color-prism-bg);
+  color: var(--color-prism-text);
+  font-family: var(--font-family-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
 
-  .badge-critical {
-    @apply badge bg-prism-red/20 text-prism-red border border-prism-red/50;
-  }
+code {
+  font-family: var(--font-family-mono);
+}
 
-  .badge-warning {
-    @apply badge bg-prism-yellow/20 text-prism-yellow border border-prism-yellow/50;
-  }
+.card {
+  @apply rounded-lg border border-prism-border bg-prism-surface;
+}
 
-  .badge-advisory {
-    @apply badge bg-prism-blue/20 text-prism-blue border border-prism-blue/50;
-  }
+.badge {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 10px;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.125rem;
+  font-weight: 600;
+}
 
-  .badge-success {
-    @apply badge bg-prism-green/20 text-prism-green border border-prism-green/50;
-  }
+.badge-critical {
+  background-color: rgb(239 68 68 / 0.2);
+  color: var(--color-prism-red);
+  border: 1px solid rgb(239 68 68 / 0.5);
+}
 
-  .badge-info {
-    @apply badge bg-prism-text-muted/20 text-prism-text-muted border border-prism-text-muted/50;
-  }
+.badge-warning {
+  background-color: rgb(234 179 8 / 0.2);
+  color: var(--color-prism-yellow);
+  border: 1px solid rgb(234 179 8 / 0.5);
+}
+
+.badge-advisory {
+  background-color: rgb(59 130 246 / 0.2);
+  color: var(--color-prism-blue);
+  border: 1px solid rgb(59 130 246 / 0.5);
+}
+
+.badge-success {
+  background-color: rgb(34 197 94 / 0.2);
+  color: var(--color-prism-green);
+  border: 1px solid rgb(34 197 94 / 0.5);
+}
+
+.badge-info {
+  background-color: rgb(139 148 158 / 0.2);
+  color: var(--color-prism-text-muted);
+  border: 1px solid rgb(139 148 158 / 0.5);
 }
 
 /* Made with Bob */
