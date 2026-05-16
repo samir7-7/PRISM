@@ -9,6 +9,14 @@ import re
 from typing import Optional, Tuple
 from urllib.parse import urlparse
 
+from errors import (
+    InvalidPRIdentifierError,
+    InvalidRepositoryURLError,
+    InvalidPortError,
+    InvalidPositiveIntegerError,
+    InvalidBackendURLError
+)
+
 
 # ============================================================================
 # PR Identifier Validation
@@ -70,7 +78,7 @@ def normalize_pr_identifier(pr_id: str) -> str:
         Normalized PR identifier (numeric string)
         
     Raises:
-        ValueError: If the PR identifier is invalid
+        InvalidPRIdentifierError: If the PR identifier is invalid
         
     Examples:
         >>> normalize_pr_identifier("#123")
@@ -81,10 +89,7 @@ def normalize_pr_identifier(pr_id: str) -> str:
         '789'
     """
     if not validate_pr_identifier(pr_id):
-        raise ValueError(
-            f"Invalid PR identifier: '{pr_id}'. "
-            f"Expected format: 123, #123, pr-123, or pull-123"
-        )
+        raise InvalidPRIdentifierError(pr_id)
     
     # Extract the numeric part
     pr_id = pr_id.strip()
@@ -95,7 +100,7 @@ def normalize_pr_identifier(pr_id: str) -> str:
         return match.group(1)
     
     # This should never happen due to validation above, but just in case
-    raise ValueError(f"Failed to normalize PR identifier: '{pr_id}'")
+    raise InvalidPRIdentifierError(pr_id)
 
 
 def extract_pr_number(pr_id: str) -> int:
@@ -109,7 +114,7 @@ def extract_pr_number(pr_id: str) -> int:
         The PR number as an integer
         
     Raises:
-        ValueError: If the PR identifier is invalid
+        InvalidPRIdentifierError: If the PR identifier is invalid
         
     Examples:
         >>> extract_pr_number("#123")
@@ -183,7 +188,7 @@ def parse_repository_url(url: str) -> dict:
         Dictionary with 'owner', 'repo', 'platform', and 'url' keys
         
     Raises:
-        ValueError: If the URL is invalid
+        InvalidRepositoryURLError: If the URL is invalid
         
     Examples:
         >>> parse_repository_url("https://github.com/owner/repo")
@@ -192,10 +197,7 @@ def parse_repository_url(url: str) -> dict:
         {'owner': 'owner', 'repo': 'repo', 'platform': 'github', 'url': 'https://github.com/owner/repo'}
     """
     if not validate_repository_url(url):
-        raise ValueError(
-            f"Invalid repository URL: '{url}'. "
-            f"Expected format: https://github.com/owner/repo or owner/repo"
-        )
+        raise InvalidRepositoryURLError(url)
     
     url = url.strip()
     
@@ -241,7 +243,7 @@ def parse_repository_url(url: str) -> dict:
         }
     
     # This should never happen due to validation above
-    raise ValueError(f"Failed to parse repository URL: '{url}'")
+    raise InvalidRepositoryURLError(url)
 
 
 def get_repository_display_name(url: str) -> str:
@@ -387,7 +389,7 @@ def validate_positive_integer(value: str, name: str = "value") -> int:
         The validated integer
         
     Raises:
-        ValueError: If the value is not a positive integer
+        InvalidPositiveIntegerError: If the value is not a positive integer
         
     Examples:
         >>> validate_positive_integer("123", "timeout")
@@ -396,10 +398,10 @@ def validate_positive_integer(value: str, name: str = "value") -> int:
     try:
         int_value = int(value)
         if int_value <= 0:
-            raise ValueError(f"{name} must be a positive integer, got: {value}")
+            raise InvalidPositiveIntegerError(value, name)
         return int_value
     except (ValueError, TypeError) as e:
-        raise ValueError(f"Invalid {name}: '{value}'. Must be a positive integer.") from e
+        raise InvalidPositiveIntegerError(value, name) from e
 
 
 def validate_port(port: str) -> int:
@@ -413,7 +415,7 @@ def validate_port(port: str) -> int:
         The validated port number
         
     Raises:
-        ValueError: If the port is invalid
+        InvalidPortError: If the port is invalid
         
     Examples:
         >>> validate_port("8000")
@@ -422,9 +424,9 @@ def validate_port(port: str) -> int:
     try:
         port_num = int(port)
         if not (1 <= port_num <= 65535):
-            raise ValueError(f"Port must be between 1 and 65535, got: {port}")
+            raise InvalidPortError(port)
         return port_num
     except (ValueError, TypeError) as e:
-        raise ValueError(f"Invalid port: '{port}'") from e
+        raise InvalidPortError(port) from e
 
 # Made with Bob
