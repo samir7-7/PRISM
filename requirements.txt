@@ -1,0 +1,30 @@
+# ── Web Framework ─────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.29.0          # ASGI server to run FastAPI
+
+# ── Request validation & settings ─────────────────────────────
+pydantic==2.7.1
+pydantic-settings==2.2.1           # Load config from .env
+
+# ── Database ───────────────────────────────────────────────────
+sqlalchemy==2.0.30                 # ORM (works with SQLite + PostgreSQL)
+alembic==1.13.1                    # DB migrations
+psycopg2-binary==2.9.9             # PostgreSQL driver (ignored when using SQLite)
+
+# ── HTTP client (GitHub API + IBM Bob API) ─────────────────────
+httpx==0.27.0                      # Async-friendly HTTP client
+
+# ── Static analysis ────────────────────────────────────────────
+tree-sitter==0.22.3                # AST parsing for JS/TS files
+tree-sitter-python==0.21.0         # Python grammar for tree-sitter
+tree-sitter-javascript==0.21.4     # JS grammar for tree-sitter
+tree-sitter-typescript==0.21.2     # TS grammar for tree-sitter
+
+# ── Graph engine ───────────────────────────────────────────────
+networkx==3.3                      # Dependency graph construction & traversal
+
+# ── Utilities ──────────────────────────────────────────────────
+python-dotenv==1.0.1               # Load .env files locally
+python-multipart==0.0.9            # Required by FastAPI for form data
+typer==0.12.3                      # CLI argument parsing (used in cli/)
+rich==13.7.1                       # Terminal output formatting (colors, tables)
