@@ -2,7 +2,7 @@
 
 ## Setup
 
-Run the setup script to create a virtual environment and install all dependencies:
+Run the setup script to create a virtual environment and install all dependencies in git bash:
 
 ```bash
 ./setup.sh
