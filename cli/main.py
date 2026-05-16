@@ -2,8 +2,10 @@ from textual.app import App
 
 
 class PrismCLI(App):
-    pass
+    def on_mount(self) -> None:
+        self.screen.styles.background = "black"
+
 
 if __name__ == "__main__":
-    app = PrismCLI()
+    app: PrismCLI = PrismCLI()
     app.run()
