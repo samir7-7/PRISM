@@ -1,0 +1,21 @@
+# Backend files
+backend/main.py
+backend/config.py
+backend/db.py
+backend/api/analysis.py
+backend/api/reports.py
+backend/services/analysis_pipeline.py
+backend/services/ast_analyzer.py
+backend/services/graph_builder.py
+backend/services/impact_traverser.py
+backend/services/ibm_bob_client.py
+backend/services/risk_scorer.py
+backend/services/regression_generator.py
+backend/models/base.py
+backend/models/report.py
+backend/schemas/analysis.py
+backend/schemas/report.py
+backend/repositories/report_repository.py
+backend/utils/diff_parser.py
+backend/utils/github_client.py
+backend/utils/graph_serializer.py
