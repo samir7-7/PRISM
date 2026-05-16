@@ -1,20 +1,39 @@
 [project]
-name = "cli"
+name = "prism-cli"
 version = "0.1.0"
-description = "Add your description here"
+description = "PRISM CLI - Pull Request Intelligent Semantic Monitor"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
-    "httpx>=0.28.1",
-    "pydantic>=2.13.4",
-    "python-dotenv>=1.2.2",
-    "rich>=15.0.0",
-    "typer>=0.25.1",
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
+backend = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+]
 dev = [
     "pytest>=9.0.3",
-    "pytest-asyncio>=1.3.0",
-    "textual-dev>=1.8.0",
+    "pytest-cov>=4.1.0",
+    "pytest-httpx>=0.30.0",
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "mypy>=1.7.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
 ]
+
+[project.scripts]
+prism = "cli.main:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cli"]

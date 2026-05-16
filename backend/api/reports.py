@@ -18,14 +18,14 @@ router = APIRouter(prefix="/api/reports", tags=["reports"])
 
 @router.get("/{report_id}", response_model=ReportResponse)
 async def get_report(
-    report_id: int,
+    report_id: str,
     db: Session = Depends(get_db)
 ):
     """
-    Retrieve a specific analysis report by ID.
+    Retrieve a specific analysis report by ID (integer or string).
     
     Args:
-        report_id: Database ID of the report
+        report_id: Database ID (int) or deterministic ID (string)
         db: Database session
         
     Returns:
@@ -35,7 +35,15 @@ async def get_report(
         HTTPException: If report not found
     """
     repo = ReportRepository(db)
-    report = repo.get_report_by_id(report_id)
+    report = None
+    
+    # Try integer lookup first if possible
+    if report_id.isdigit():
+        report = repo.get_report_by_id(int(report_id))
+    
+    # If not found by int or not an int, try string ID
+    if not report:
+        report = repo.get_report_by_string_id(report_id)
     
     if not report:
         raise HTTPException(

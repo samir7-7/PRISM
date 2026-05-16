@@ -3,6 +3,7 @@ Repository layer for database operations on analysis reports.
 Handles CRUD operations for AnalysisReport model.
 """
 import json
+import hashlib
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -17,6 +18,11 @@ class ReportRepository:
     def __init__(self, db: Session):
         self.db = db
     
+    def _make_report_id(self, pr_id: str, repository: str) -> str:
+        """Build a deterministic 8-char report_id from the request."""
+        digest = hashlib.sha1(f"{repository}#{pr_id}".encode()).hexdigest()
+        return digest[:8]
+    
     def create_report(self, analysis_result: dict) -> AnalysisReport:
         """
         Create a new analysis report in the database.
@@ -27,8 +33,15 @@ class ReportRepository:
         Returns:
             Created AnalysisReport instance
         """
+        # Generate deterministic report_id
+        report_id = self._make_report_id(
+            analysis_result['pr_id'], 
+            analysis_result['repository']
+        )
+        
         # Serialize complex objects to JSON strings
         report = AnalysisReport(
+            report_id=report_id,
             pr_id=analysis_result['pr_id'],
             repository=analysis_result['repository'],
             pr_url=analysis_result.get('pr_url'),
@@ -53,7 +66,7 @@ class ReportRepository:
     
     def get_report_by_id(self, report_id: int) -> Optional[AnalysisReport]:
         """
-        Retrieve a report by its ID.
+        Retrieve a report by its database integer ID.
         
         Args:
             report_id: Database ID of the report
@@ -63,6 +76,20 @@ class ReportRepository:
         """
         return self.db.query(AnalysisReport).filter(
             AnalysisReport.id == report_id
+        ).first()
+
+    def get_report_by_string_id(self, report_id: str) -> Optional[AnalysisReport]:
+        """
+        Retrieve a report by its deterministic string report_id.
+        
+        Args:
+            report_id: 8-char string ID of the report
+            
+        Returns:
+            AnalysisReport instance or None if not found
+        """
+        return self.db.query(AnalysisReport).filter(
+            AnalysisReport.report_id == report_id
         ).first()
     
     def get_report_by_pr(
@@ -165,6 +192,7 @@ class ReportRepository:
         """
         return ReportResponse(
             id=report.id,
+            report_id=report.report_id,
             pr_id=report.pr_id,
             repository=report.repository,
             pr_url=report.pr_url,
@@ -194,6 +222,7 @@ class ReportRepository:
         """
         return ReportListItem(
             id=report.id,
+            report_id=report.report_id,
             pr_id=report.pr_id,
             repository=report.repository,
             risk_score=report.risk_score,

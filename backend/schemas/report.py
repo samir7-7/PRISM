@@ -10,6 +10,7 @@ class ReportResponse(BaseModel):
     """Response schema for GET /api/reports/{id} endpoint."""
     
     id: int
+    report_id: Optional[str] = None
     pr_id: str
     repository: str
     pr_url: Optional[str] = None
@@ -44,6 +45,7 @@ class ReportListItem(BaseModel):
     """Schema for report list items."""
     
     id: int
+    report_id: Optional[str] = None
     pr_id: str
     repository: str
     risk_score: float

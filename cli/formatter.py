@@ -1,302 +1,298 @@
-"""
-Formatting utilities for PRISM CLI.
+"""Rich-based output rendering.
 
-This module provides functions to format output for the CLI, including
-error messages, analysis results, and other user-facing content using
-the Rich library for beautiful terminal output.
+Three public surfaces:
+
+* ``with_progress`` — context manager that drives a fake-but-honest staged
+  spinner while the backend runs the real (synchronous) analysis.
+* ``render_summary`` — the boxed summary panel printed after a successful run.
+* ``render_error`` / ``render_json`` — the two terminal output paths.
+
+The progress stage labels are cosmetic: the backend is a single blocking POST
+and we don't get per-stage events. Each label corresponds to a real backend
+phase, so the story stays honest. Swapping to SSE later wouldn't change this
+file's public surface.
 """
 
-from typing import Optional
+from __future__ import annotations
+
+import json
+import sys
+import threading
+from contextlib import contextmanager
+from typing import Iterator
+
+from rich.box import HEAVY, ROUNDED
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
+from rich.text import Text
 
-from errors import PRISMError, is_prism_error
-
-
-# ============================================================================
-# Console Setup
-# ============================================================================
-
-# Global console instance for consistent formatting
-# Force UTF-8 encoding to handle emojis on Windows
-console = Console(force_terminal=True, legacy_windows=False)
+from .client import AnalysisResponse
+from .errors import PrismError
 
 
-# ============================================================================
-# Error Formatting
-# ============================================================================
+def _stdout_supports_unicode() -> bool:
+    """Return True if ``sys.stdout`` can encode the characters we use.
 
-def format_error(error: Exception, show_traceback: bool = False) -> None:
+    The Windows legacy console uses cp1252 by default — it explodes on the
+    check-mark / arrow glyphs we render. We detect that up-front and fall
+    back to ASCII equivalents so the CLI runs on every Windows machine
+    without forcing the user to set ``PYTHONIOENCODING``.
     """
-    Format and display an error message using Rich.
-    
-    Handles both PRISMError instances (with rich formatting) and
-    standard exceptions (with basic formatting).
-    
-    Args:
-        error: The exception to format
-        show_traceback: Whether to show the full traceback (for debugging)
-    """
-    if is_prism_error(error):
-        _format_prism_error(error)  # type: ignore[arg-type]
-    else:
-        _format_generic_error(error)
-    
-    if show_traceback:
-        console.print_exception()
+    encoding = (getattr(sys.stdout, "encoding", None) or "").lower()
+    if not encoding or encoding in {"cp1252", "ascii"}:
+        return False
+    try:
+        "✓⚠✗▸━".encode(encoding)
+    except (UnicodeEncodeError, LookupError):
+        return False
+    return True
 
 
-def _format_prism_error(error: PRISMError) -> None:
+# Choose glyphs once at import time. ASCII fallbacks keep the layout but
+# avoid Unicode encode errors on the legacy Windows console.
+_UNICODE = _stdout_supports_unicode()
+GLYPH_OK = "✓" if _UNICODE else "v"
+GLYPH_WARN = "⚠" if _UNICODE else "!"
+GLYPH_FAIL = "✗" if _UNICODE else "x"
+GLYPH_ARROW = "▸" if _UNICODE else ">"
+
+# Canonical stage labels — also the public ordering for the spinner.
+ANALYSIS_STAGES: list[str] = [
+    "Fetching PR diff",
+    "Parsing AST",
+    "Building dependency graph",
+    "Traversing impact (2 hops)",
+    "Calling IBM Bob for semantic reasoning",
+    "Computing risk score",
+    "Generating regression scenarios",
+]
+
+# Per-stage hold time in seconds. The semantic-reasoning step is by far the
+# slowest in practice, so the spinner lingers there longest. Total ≈ 24s,
+# which matches the backend's typical 20–25s wall time. If the real call
+# finishes early the spinner is closed; if it overshoots, we hold on the last
+# stage rather than racing past the end.
+_STAGE_DURATIONS_S: list[float] = [1.0, 1.5, 2.5, 2.0, 12.0, 2.5, 2.5]
+
+# Risk-label → Rich style. Used by both the score panel and the title.
+RISK_STYLE: dict[str, str] = {
+    "LOW": "bold green",
+    "MEDIUM": "bold yellow",
+    "HIGH": "bold red",
+}
+
+# Module-level console so tests can monkey-patch a recording Console here.
+# ``safe_box=True`` swaps fancy Unicode box-drawing for ASCII when the
+# detected encoding can't represent it — same defensive move as the glyphs.
+console = Console(safe_box=not _UNICODE)
+error_console = Console(stderr=True, safe_box=not _UNICODE)
+
+
+# --------------------------------------------------------------------- #
+# Progress
+# --------------------------------------------------------------------- #
+@contextmanager
+def with_progress(stages: list[str] | None = None) -> Iterator[None]:
+    """Show a staged spinner while the backend works.
+
+    A background thread advances the stage label on the schedule defined by
+    ``_STAGE_DURATIONS_S``; once the caller exits the context, the spinner
+    closes regardless of whether the timer finished. Suppressed automatically
+    when stdout is not a TTY (CI, ``--json``-piped use).
     """
-    Format a PRISMError with rich styling.
-    
-    Creates a beautiful error panel with:
-    - Error code and message
-    - Optional suggestion
-    - Color-coded by error type
-    
-    Args:
-        error: The PRISMError to format
-    """
-    # Determine color based on error code prefix
-    color = _get_error_color(error.code)
-    
-    # Build the error content
-    content = Text()
-    content.append("[X] Error ", style="bold red")
-    content.append(f"[{error.code}]", style=f"bold {color}")
-    content.append(f": {error.message}\n", style="red")
-    
-    # Add suggestion if available
-    if error.suggestion:
-        content.append("\n[!] ", style="bold yellow")
-        content.append("Suggestion: ", style="bold yellow")
-        content.append(error.suggestion, style="yellow")
-    
-    # Create panel with appropriate styling
-    panel = Panel(
-        content,
-        border_style=color,
-        padding=(1, 2),
-        expand=False
+    stages = stages or ANALYSIS_STAGES
+
+    # In non-interactive contexts the spinner just adds noise. Yield a no-op
+    # so the same call site works in tests and pipelines.
+    if not sys.stdout.isatty():
+        yield
+        return
+
+    progress = Progress(
+        SpinnerColumn(style="cyan"),
+        TextColumn("[bold]{task.description}[/bold]"),
+        BarColumn(bar_width=None, complete_style="cyan", finished_style="cyan"),
+        TimeElapsedColumn(),
+        console=console,
+        transient=False,
     )
-    
+
+    total = len(stages)
+    stop = threading.Event()
+
+    with progress:
+        task_id = progress.add_task(stages[0], total=total)
+
+        def _advance() -> None:
+            for index in range(total):
+                # Update label to the *current* stage; bar advances to index.
+                progress.update(task_id, description=stages[index], completed=index)
+                # Wait for either the stage duration or an early stop.
+                if stop.wait(_STAGE_DURATIONS_S[index]):
+                    return
+            # All scripted stages elapsed but the backend still hasn't replied —
+            # park on the last stage so we don't pretend to be done.
+            progress.update(task_id, description=stages[-1], completed=total - 1)
+
+        thread = threading.Thread(target=_advance, daemon=True)
+        thread.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            thread.join(timeout=0.1)
+            progress.update(
+                task_id,
+                description="Analysis complete",
+                completed=total,
+            )
+
+
+# --------------------------------------------------------------------- #
+# Summary
+# --------------------------------------------------------------------- #
+def render_summary(response: AnalysisResponse) -> None:
+    """Print the post-analysis summary panel to stdout."""
+    risk_style = RISK_STYLE.get(response.risk_label, "bold")
+
+    # Title — em-dash falls back to hyphen on cp1252-only terminals so the
+    # banner never crashes the run on legacy Windows consoles.
+    separator = " — " if _UNICODE else " - "
+    title = Panel(
+        Text(f"PRISM{separator}Pull Request Intelligent Semantic Monitor", style="bold cyan"),
+        box=HEAVY,
+        border_style="cyan",
+        padding=(0, 2),
+    )
     console.print()
-    console.print(panel)
+    console.print(title)
+    console.print()
+
+    # Status checklist
+    checklist = Text()
+    checklist.append(f"  {GLYPH_OK} Pull request analyzed\n", style="green")
+    checklist.append(f"  {GLYPH_OK} Dependency graph constructed\n", style="green")
+    checklist.append(
+        f"  {GLYPH_OK} {response.impacted_node_count} impacted node"
+        f"{'s' if response.impacted_node_count != 1 else ''} identified\n",
+        style="green",
+    )
+    if response.risk_label == "HIGH":
+        checklist.append(f"  {GLYPH_WARN} Semantic risks detected\n", style="yellow")
+    else:
+        checklist.append(f"  {GLYPH_OK} Semantic checks passed\n", style="green")
+    checklist.append(f"  {GLYPH_OK} Regression scenarios generated\n", style="green")
+    console.print(checklist)
+
+    # PARTIAL status warning — graceful degradation per the PRD.
+    if response.status == "PARTIAL":
+        console.print(
+            Text(
+                f"  {GLYPH_WARN} IBM Bob unavailable - graph and score are still valid.",
+                style="yellow",
+            )
+        )
+        console.print()
+
+    # Risk-score box
+    score_text = Text()
+    score_text.append("Risk Score:  ", style="bold")
+    score_text.append(
+        f"{response.risk_label}  ({response.risk_score} / 100)",
+        style=risk_style,
+    )
+    score_panel = Panel(
+        score_text,
+        box=ROUNDED,
+        border_style=risk_style,
+        padding=(0, 2),
+        expand=False,
+    )
+    console.print(score_panel)
+    console.print()
+
+    # Dashboard link
+    console.print(Text("  Open full analysis:", style="bold"))
+    link = Text(
+        f"  {GLYPH_ARROW} {response.dashboard_url}",
+        style=f"underline {risk_style.split()[-1]}",
+    )
+    console.print(link)
     console.print()
 
 
-def _format_generic_error(error: Exception) -> None:
-    """
-    Format a generic exception with basic styling.
-    
-    Args:
-        error: The exception to format
-    """
-    content = Text()
-    content.append("[X] Error: ", style="bold red")
-    content.append(str(error), style="red")
-    
+# --------------------------------------------------------------------- #
+# Errors
+# --------------------------------------------------------------------- #
+def render_error(err: PrismError) -> None:
+    """Print a red boxed error with the typed exception's hint."""
+    body = Text()
+    body.append(f"{GLYPH_FAIL} ", style="bold red")
+    body.append(err.message, style="bold")
+    if err.hint:
+        body.append("\n  Hint: ", style="dim")
+        body.append(err.hint, style="dim")
+
     panel = Panel(
-        content,
+        body,
+        box=ROUNDED,
         border_style="red",
-        padding=(1, 2),
-        expand=False
+        padding=(0, 2),
+        expand=False,
     )
-    
-    console.print()
-    console.print(panel)
-    console.print()
+    error_console.print()
+    error_console.print(panel)
+    error_console.print()
 
 
-def _get_error_color(error_code: str) -> str:
-    """
-    Get the color for an error based on its code.
-    
-    Args:
-        error_code: The error code (e.g., "E1001")
-        
-    Returns:
-        Color name for Rich styling
-    """
-    if error_code.startswith("E1"):
-        return "yellow"  # Validation errors
-    elif error_code.startswith("E2"):
-        return "red"  # Network errors
-    elif error_code.startswith("E3"):
-        return "magenta"  # API errors
-    elif error_code.startswith("E4"):
-        return "blue"  # Configuration errors
-    else:
-        return "red"  # Default
+# --------------------------------------------------------------------- #
+# JSON output
+# --------------------------------------------------------------------- #
+def render_json(response: AnalysisResponse) -> None:
+    """Emit raw JSON on stdout — pipe-clean, no Rich formatting."""
+    print(json.dumps(response.model_dump(), separators=(",", ":")))
 
 
-# ============================================================================
-# Success Formatting
-# ============================================================================
-
-def format_success(message: str) -> None:
-    """
-    Format and display a success message.
-    
-    Args:
-        message: The success message to display
-    """
-    content = Text()
-    content.append("[OK] ", style="bold green")
-    content.append(message, style="green")
-    
-    console.print()
-    console.print(content)
-    console.print()
-
-
-# ============================================================================
-# Info Formatting
-# ============================================================================
-
-def format_info(message: str, title: Optional[str] = None) -> None:
-    """
-    Format and display an informational message.
-    
-    Args:
-        message: The info message to display
-        title: Optional title for the message
-    """
-    if title:
-        content = Text()
-        content.append(f"[i] {title}\n", style="bold cyan")
-        content.append(message, style="cyan")
-    else:
-        content = Text()
-        content.append("[i] ", style="bold cyan")
-        content.append(message, style="cyan")
-    
-    console.print()
-    console.print(content)
-    console.print()
-
-
-# ============================================================================
-# Warning Formatting
-# ============================================================================
-
-def format_warning(message: str) -> None:
-    """
-    Format and display a warning message.
-    
-    Args:
-        message: The warning message to display
-    """
-    content = Text()
-    content.append("[!] ", style="bold yellow")
-    content.append(message, style="yellow")
-    
-    console.print()
-    console.print(content)
-    console.print()
-
-
-# ============================================================================
-# Analysis Result Formatting
-# ============================================================================
-
-def format_analysis_result(result: dict) -> None:
-    """
-    Format and display an analysis result.
-    
-    Args:
-        result: Dictionary containing analysis results with keys:
-            - report_id: UUID string
-            - dashboard_url: URL to the dashboard
-            - risk_score: Integer risk score
-            - risk_label: Risk level (LOW, MEDIUM, HIGH)
-            - impacted_node_count: Number of impacted nodes
-            - status: Analysis status (COMPLETE, PARTIAL)
-    """
-    # Create a table for the results
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column("Key", style="bold cyan")
-    table.add_column("Value", style="white")
-    
-    # Add rows
-    table.add_row("Report ID", result.get("report_id", "N/A"))
-    table.add_row("Dashboard URL", result.get("dashboard_url", "N/A"))
-    
-    # Format risk score with color
-    risk_label = result.get("risk_label", "UNKNOWN")
-    risk_score = result.get("risk_score", 0)
-    risk_color = _get_risk_color(risk_label)
-    risk_text = Text(f"{risk_score} ({risk_label})", style=f"bold {risk_color}")
-    table.add_row("Risk Score", risk_text)
-    
-    table.add_row("Impacted Nodes", str(result.get("impacted_node_count", 0)))
-    table.add_row("Status", result.get("status", "UNKNOWN"))
-    
-    # Create panel
-    panel = Panel(
-        table,
-        title="[bold green][OK] Analysis Complete[/bold green]",
-        border_style="green",
-        padding=(1, 2)
+def render_error_json(err: PrismError) -> None:
+    """Emit a structured error object — used in ``--json`` mode."""
+    print(
+        json.dumps(
+            {"error": err.message, "hint": err.hint},
+            separators=(",", ":"),
+        ),
+        file=sys.stderr,
     )
-    
+
+
+# --------------------------------------------------------------------- #
+# Misc
+# --------------------------------------------------------------------- #
+def render_health_check(backend_url: str, ok: bool) -> None:
+    """Tiny one-liner used by the pre-flight check on failure paths."""
+    if ok:
+        return
+    error_console.print(
+        Text(
+            f"{GLYPH_FAIL} Backend at {backend_url} is not responding to /healthz",
+            style="red",
+        ),
+    )
+
+
+def render_request_summary(pr_identifier: str, repository_url: str) -> None:
+    """Print what we're about to ask the backend for — keeps demos transparent."""
+    table = Table.grid(padding=(0, 1))
+    table.add_column(style="dim")
+    table.add_column()
+    table.add_row("PR:", Text(pr_identifier, style="bold"))
+    table.add_row("Repo:", Text(repository_url, style="cyan"))
+    console.print(table)
     console.print()
-    console.print(panel)
-    console.print()
-
-
-def _get_risk_color(risk_label: str) -> str:
-    """
-    Get the color for a risk label.
-    
-    Args:
-        risk_label: The risk label (LOW, MEDIUM, HIGH)
-        
-    Returns:
-        Color name for Rich styling
-    """
-    risk_colors = {
-        "LOW": "green",
-        "MEDIUM": "yellow",
-        "HIGH": "red"
-    }
-    return risk_colors.get(risk_label.upper(), "white")
-
-
-# ============================================================================
-# Progress Formatting
-# ============================================================================
-
-def format_progress(message: str) -> None:
-    """
-    Format and display a progress message.
-    
-    Args:
-        message: The progress message to display
-    """
-    content = Text()
-    content.append("[...] ", style="bold blue")
-    content.append(message, style="blue")
-    
-    console.print(content)
-
-
-# ============================================================================
-# JSON Formatting
-# ============================================================================
-
-def format_json(data: dict) -> None:
-    """
-    Format and display JSON data.
-    
-    Args:
-        data: Dictionary to display as JSON
-    """
-    import json
-    console.print_json(json.dumps(data, indent=2))
-
-
-# Made with Bob

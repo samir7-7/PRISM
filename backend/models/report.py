@@ -14,6 +14,7 @@ class AnalysisReport(Base):
     
     # Primary key
     id = Column(Integer, primary_key=True, index=True)
+    report_id = Column(String(20), index=True, nullable=True)
     
     # PR Information
     pr_id = Column(String(50), nullable=False, index=True)

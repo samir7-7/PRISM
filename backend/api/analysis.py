@@ -6,14 +6,74 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
 
+import hashlib
+
 from backend.db import get_db
-from backend.schemas.analysis import AnalyzeRequest, AnalyzeResponse, AnalysisError
+from backend.schemas.analysis import AnalyzeRequest, AnalyzeResponse, AnalysisError, AnalysisResponse
 from backend.services.analysis_pipeline import AnalysisPipeline
 from backend.repositories.report_repository import ReportRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["analysis"])
+
+
+def make_report_id(pr_id: str, repo_url: str) -> str:
+    """Build a deterministic 8-char report_id from the request."""
+    digest = hashlib.sha1(f"{repo_url}#{pr_id}".encode()).hexdigest()
+    return digest[:8]
+
+
+@router.post("/analysis/run", response_model=AnalysisResponse)
+async def analyze_pr_contract(
+    request: AnalyzeRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Polished CLI entry point - Analyze a PR and return a contract-matching response.
+    """
+    try:
+        logger.info(f"Received analysis request from CLI for PR {request.pr_identifier}")
+        
+        # Execute analysis pipeline
+        pipeline = AnalysisPipeline()
+        result = await pipeline.analyze_pr(
+            pr_id=request.pr_identifier,
+            repository=request.repository_url
+        )
+        
+        # Store results in database
+        repo = ReportRepository(db)
+        report = repo.create_report(result)
+        
+        # Map IBM BOB internal levels to CLI expected levels
+        level_map = {
+            'CRITICAL': 'HIGH',
+            'HIGH': 'HIGH',
+            'MEDIUM': 'MEDIUM',
+            'LOW': 'LOW',
+            'UNKNOWN': 'LOW'
+        }
+        
+        # Convert to response model matching Prism CLI contract
+        response = AnalysisResponse(
+            report_id=make_report_id(request.pr_identifier, request.repository_url),
+            dashboard_url=f"http://localhost:3000/report/{make_report_id(request.pr_identifier, request.repository_url)}",
+            risk_score=int(result['risk_score']),
+            risk_label=level_map.get(result['risk_level'], 'LOW'),
+            impacted_node_count=len(result['impacted_nodes']),
+            status="COMPLETE" if result['status'] == 'completed' else "PARTIAL"
+        )
+        
+        logger.info(f"Analysis completed for CLI. Report ID: {response.report_id}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Analysis failed for CLI: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)

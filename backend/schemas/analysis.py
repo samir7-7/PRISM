@@ -6,18 +6,32 @@ from pydantic import BaseModel, Field
 
 
 class AnalyzeRequest(BaseModel):
-    """Request schema for POST /api/analyze endpoint."""
+    """Request schema for POST /api/analysis/run endpoint."""
     
-    pr_id: str = Field(..., description="Pull request ID or number")
-    repository: str = Field(..., description="Repository in format 'owner/repo'")
+    pr_identifier: str = Field(..., alias="pr_id", description="Pull request ID or number")
+    repository_url: str = Field(..., alias="repository", description="Repository URL or owner/repo")
+    github_token: Optional[str] = None
     
     class Config:
+        populate_by_name = True
         json_schema_extra = {
             "example": {
-                "pr_id": "123",
-                "repository": "octocat/Hello-World"
+                "pr_identifier": "123",
+                "repository_url": "https://github.com/octocat/Hello-World",
+                "github_token": "ghp_..."
             }
         }
+
+
+class AnalysisResponse(BaseModel):
+    """Response schema matching the Prism CLI contract."""
+    
+    report_id: str
+    dashboard_url: str
+    risk_score: int
+    risk_label: str  # LOW, MEDIUM, HIGH
+    impacted_node_count: int
+    status: str = "COMPLETE"
 
 
 class RiskFactors(BaseModel):

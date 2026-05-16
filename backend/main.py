@@ -88,6 +88,17 @@ async def root():
     }
 
 
+@app.get("/healthz", tags=["health"])
+async def healthz():
+    """
+    CLI health check endpoint.
+    
+    Returns 200 {"ok": true} if the service is up.
+    Required by the Prism CLI pre-flight check.
+    """
+    return {"ok": True}
+
+
 @app.get("/health", tags=["health"])
 async def health_check():
     """
