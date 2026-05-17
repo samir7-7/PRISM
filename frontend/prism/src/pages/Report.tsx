@@ -3,30 +3,33 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useAnalysisStore } from '../store/analysisStore';
 import { Dashboard } from './Dashboard';
-import type { ReportResponse } from '../types';
+import type { ReportResponse, AnalyzeResponse } from '../types';
 
 export const Report = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { setAnalysis, setLoading, setError } = useAnalysisStore();
   const [isLoadingReport, setIsLoadingReport] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadReport = async () => {
       if (!id) {
-        navigate('/');
+        setLoadError('No report ID provided');
+        setIsLoadingReport(false);
         return;
       }
 
       setLoading(true);
       setIsLoadingReport(true);
+      setLoadError(null);
 
       try {
         // Accept both string and numeric IDs
         const report = await apiService.getReport(id);
         
         // Convert ReportResponse to AnalyzeResponse format
-        const analysisData = {
+        const analysisData: AnalyzeResponse = {
           report_id: report.id,
           pr_id: report.pr_id,
           repository: report.repository,
@@ -42,25 +45,46 @@ export const Report = () => {
           created_at: report.created_at,
         };
 
-        setAnalysis(analysisData as any);
+        setAnalysis(analysisData);
         setIsLoadingReport(false);
         setLoading(false);
       } catch (error: any) {
         console.error('Failed to load report:', error);
-        setError(error.response?.data?.detail || 'Failed to load report');
+        const errorMessage = error.response?.data?.detail || 'Failed to load report';
+        setError(errorMessage);
+        setLoadError(errorMessage);
         setIsLoadingReport(false);
         setLoading(false);
-        navigate('/');
       }
     };
 
     loadReport();
-  }, [id, navigate, setAnalysis, setLoading, setError]);
+  }, [id, setAnalysis, setLoading, setError]);
 
   if (isLoadingReport) {
     return (
       <div className="min-h-screen bg-prism-bg flex items-center justify-center">
         <div className="text-prism-text-muted">Loading report...</div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-prism-bg flex flex-col items-center justify-center p-8">
+        <div className="card p-8 max-w-md text-center">
+          <h2 className="text-2xl font-bold text-prism-red mb-4">Report Not Found</h2>
+          <p className="text-prism-text-muted mb-6">{loadError}</p>
+          <p className="text-sm text-prism-text-muted mb-6">
+            Report ID: <code className="bg-prism-bg px-2 py-1 rounded">{id}</code>
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-prism-blue hover:bg-prism-blue/80 text-white font-medium px-6 py-2 rounded transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
       </div>
     );
   }

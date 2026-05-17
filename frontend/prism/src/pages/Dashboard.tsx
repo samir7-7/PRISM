@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopNav } from '../components/layout/TopNav';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -12,14 +11,27 @@ export const Dashboard = () => {
   const navigate = useNavigate();
   const { currentAnalysis, isLoading } = useAnalysisStore();
 
-  useEffect(() => {
-    // Redirect to home if no analysis data
-    if (!currentAnalysis && !isLoading) {
-      navigate('/');
-    }
-  }, [currentAnalysis, isLoading, navigate]);
+  // Show message if no analysis data instead of redirecting
+  if (!currentAnalysis && !isLoading) {
+    return (
+      <div className="min-h-screen bg-prism-bg flex flex-col items-center justify-center p-8">
+        <div className="card p-8 max-w-md text-center">
+          <h2 className="text-2xl font-bold text-prism-text mb-4">No Analysis Data</h2>
+          <p className="text-prism-text-muted mb-6">
+            Please run an analysis first to view the dashboard.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-prism-blue hover:bg-prism-blue/80 text-white font-medium px-6 py-2 rounded transition-colors"
+          >
+            Run Analysis
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  if (!currentAnalysis) {
+  if (isLoading || !currentAnalysis) {
     return (
       <div className="min-h-screen bg-prism-bg flex items-center justify-center">
         <div className="text-prism-text-muted">Loading analysis...</div>
