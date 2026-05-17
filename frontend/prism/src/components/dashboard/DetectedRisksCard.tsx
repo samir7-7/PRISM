@@ -28,41 +28,41 @@ export const DetectedRisksCard = ({ scenarios }: DetectedRisksCardProps) => {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <AlertTriangle className="w-5 h-5 text-prism-orange" />
-        <h3 className="text-sm font-semibold text-prism-text">Detected Risks</h3>
+        <h3 className="text-h5 text-prism-text">Detected Risks</h3>
       </div>
 
       {/* Risk List */}
-      <div className="space-y-4 mb-4">
+      <div className="space-y-4 mb-4 max-h-96 overflow-y-auto custom-scrollbar">
         {/* Critical Risks */}
         {groupedScenarios.HIGH.map((scenario, index) => (
-          <div key={scenario.scenario_id} className="border-l-2 border-prism-red pl-3">
+          <div key={scenario.scenario_id} className="border-l-2 border-prism-red pl-3 py-1">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-sm font-semibold text-prism-text">{scenario.title}</h4>
+              <h4 className="text-body-sm font-semibold text-prism-text">{scenario.title}</h4>
               <RiskBadge priority="HIGH" />
             </div>
-            <p className="text-xs text-prism-text-muted">{scenario.description}</p>
+            <p className="text-caption text-prism-text-muted leading-relaxed">{scenario.description}</p>
           </div>
         ))}
 
         {/* Warning Risks */}
         {groupedScenarios.MEDIUM.map((scenario, index) => (
-          <div key={scenario.scenario_id} className="border-l-2 border-prism-yellow pl-3">
+          <div key={scenario.scenario_id} className="border-l-2 border-prism-yellow pl-3 py-1">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-sm font-semibold text-prism-text">{scenario.title}</h4>
+              <h4 className="text-body-sm font-semibold text-prism-text">{scenario.title}</h4>
               <RiskBadge priority="MEDIUM" />
             </div>
-            <p className="text-xs text-prism-text-muted">{scenario.description}</p>
+            <p className="text-caption text-prism-text-muted leading-relaxed">{scenario.description}</p>
           </div>
         ))}
 
         {/* Advisory Risks */}
         {groupedScenarios.LOW.slice(0, 2).map((scenario, index) => (
-          <div key={scenario.scenario_id} className="border-l-2 border-prism-blue pl-3">
+          <div key={scenario.scenario_id} className="border-l-2 border-prism-blue pl-3 py-1">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h4 className="text-sm font-semibold text-prism-text">{scenario.title}</h4>
+              <h4 className="text-body-sm font-semibold text-prism-text">{scenario.title}</h4>
               <RiskBadge priority="LOW" />
             </div>
-            <p className="text-xs text-prism-text-muted">{scenario.description}</p>
+            <p className="text-caption text-prism-text-muted leading-relaxed">{scenario.description}</p>
           </div>
         ))}
       </div>
@@ -70,7 +70,7 @@ export const DetectedRisksCard = ({ scenarios }: DetectedRisksCardProps) => {
       {/* Footer Link */}
       <button
         onClick={() => navigate('/dashboard/tests')}
-        className="text-sm text-prism-blue hover:text-prism-blue/80 flex items-center gap-2 transition-colors"
+        className="text-body-sm text-prism-blue hover:text-prism-blue/80 flex items-center gap-2 transition-colors font-medium focus-ring rounded px-2 py-1"
       >
         VIEW ALL {scenarios.length} ANOMALIES
         <ArrowRight className="w-4 h-4" />

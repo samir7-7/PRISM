@@ -31,24 +31,24 @@ export const ScenarioCard = ({ scenario, index }: ScenarioCardProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="card p-6 flex flex-col"
+      className="card p-6 flex flex-col card-hover"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-sm font-semibold text-prism-text flex-1">
+        <h3 className="text-body-sm font-semibold text-prism-text flex-1">
           {scenario.title}
         </h3>
         <button
           onClick={handleCopy}
-          className="p-2 hover:bg-prism-bg rounded transition-colors"
+          className="btn-ghost p-2"
           title="Copy test code"
         >
-          <Copy className="w-4 h-4 text-prism-text-muted" />
+          <Copy className="w-4 h-4" />
         </button>
       </div>
 
       {/* Code Block */}
-      <div className="bg-prism-bg rounded p-4 mb-4 font-mono text-xs overflow-x-auto flex-1">
+      <div className="code-block mb-4 flex-1 custom-scrollbar">
         <pre className="text-prism-text-muted">
           <span className="text-prism-blue">it</span>
           <span className="text-prism-text">(</span>
@@ -84,13 +84,13 @@ export const ScenarioCard = ({ scenario, index }: ScenarioCardProps) => {
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2">
-        <span className="text-xs px-2 py-1 rounded bg-prism-orange/10 text-prism-orange border border-prism-orange/30 font-mono">
+        <span className="text-caption px-2.5 py-1 rounded bg-prism-orange/10 text-prism-orange border border-prism-orange/30 font-mono">
           #{scenario.affected_component.split('.')[0]}
         </span>
-        <span className="text-xs px-2 py-1 rounded bg-prism-blue/10 text-prism-blue border border-prism-blue/30 font-mono">
+        <span className="text-caption px-2.5 py-1 rounded bg-prism-blue/10 text-prism-blue border border-prism-blue/30 font-mono">
           #regression
         </span>
-        <span className="text-xs px-2 py-1 rounded bg-prism-yellow/10 text-prism-yellow border border-prism-yellow/30 font-mono">
+        <span className="text-caption px-2.5 py-1 rounded bg-prism-yellow/10 text-prism-yellow border border-prism-yellow/30 font-mono">
           #{scenario.priority.toLowerCase()}
         </span>
       </div>

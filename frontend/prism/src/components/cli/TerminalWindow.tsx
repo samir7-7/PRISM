@@ -66,7 +66,7 @@ export const TerminalWindow = ({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card overflow-hidden"
+        className="card overflow-hidden shadow-2xl"
       >
         {/* Terminal Header */}
         <div className="bg-prism-surface border-b border-prism-border px-4 py-3 flex items-center gap-2">
@@ -75,13 +75,13 @@ export const TerminalWindow = ({
             <div className="w-3 h-3 rounded-full bg-prism-yellow"></div>
             <div className="w-3 h-3 rounded-full bg-prism-green"></div>
           </div>
-          <span className="ml-4 text-prism-text-muted text-sm font-mono">
+          <span className="ml-4 text-prism-text-muted text-body-sm font-mono">
             prism-cli --analyze
           </span>
         </div>
 
         {/* Terminal Content */}
-        <div className="bg-prism-bg p-6 font-mono text-sm">
+        <div className="bg-prism-bg p-6 font-mono text-body-sm">
           {/* Command */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -121,21 +121,21 @@ export const TerminalWindow = ({
               className="space-y-4"
             >
               <div className="border-t border-prism-border pt-4">
-                <div className="text-prism-text-muted mb-2">ANALYSIS SUMMARY</div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-prism-text">Risk Score:</span>
-                  <span className={`text-2xl font-bold ${getRiskColor(riskLevel)}`}>
+                <div className="text-overline text-prism-text-muted mb-3">ANALYSIS SUMMARY</div>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-body text-prism-text">Risk Score:</span>
+                  <span className={`text-h2 ${getRiskColor(riskLevel)}`}>
                     {riskLevel?.toUpperCase()}
                   </span>
-                  <span className="text-prism-text-muted">
+                  <span className="text-body-sm text-prism-text-muted">
                     ({Math.round(riskScore)}/100)
                   </span>
                 </div>
               </div>
 
               {reportId && (
-                <div className="bg-prism-red/10 border border-prism-red/30 rounded p-4">
-                  <div className="text-prism-text-muted text-xs mb-2">
+                <div className="bg-prism-red/10 border border-prism-red/30 rounded-lg p-4">
+                  <div className="text-caption text-prism-text-muted mb-2">
                     Open full analysis:
                   </div>
                   <a
@@ -144,7 +144,7 @@ export const TerminalWindow = ({
                       e.preventDefault();
                       navigate(`/report/${reportId}`);
                     }}
-                    className="text-prism-blue hover:text-prism-blue/80 flex items-center gap-2 break-all"
+                    className="text-body-sm text-prism-blue hover:text-prism-blue/80 flex items-center gap-2 break-all transition-colors"
                   >
                     {window.location.origin}/report/{reportId}
                     <ExternalLink className="w-4 h-4 flex-shrink-0" />
@@ -156,7 +156,7 @@ export const TerminalWindow = ({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="flex items-center gap-2 text-prism-green"
+                className="flex items-center gap-2 text-prism-green text-body-sm"
               >
                 <span className="animate-pulse">_</span>
                 <span>Ready for review. Analysis complete.</span>

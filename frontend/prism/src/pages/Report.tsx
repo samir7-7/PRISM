@@ -72,15 +72,15 @@ export const Report = () => {
   if (loadError) {
     return (
       <div className="min-h-screen bg-prism-bg flex flex-col items-center justify-center p-8">
-        <div className="card p-8 max-w-md text-center">
-          <h2 className="text-2xl font-bold text-prism-red mb-4">Report Not Found</h2>
-          <p className="text-prism-text-muted mb-6">{loadError}</p>
-          <p className="text-sm text-prism-text-muted mb-6">
-            Report ID: <code className="bg-prism-bg px-2 py-1 rounded">{id}</code>
+        <div className="card p-8 max-w-md text-center animate-fade-in">
+          <h2 className="text-h2 text-prism-red mb-4">Report Not Found</h2>
+          <p className="text-body text-prism-text-muted mb-6">{loadError}</p>
+          <p className="text-body-sm text-prism-text-muted mb-6">
+            Report ID: <code className="code-inline">{id}</code>
           </p>
           <button
             onClick={() => navigate('/')}
-            className="bg-prism-blue hover:bg-prism-blue/80 text-white font-medium px-6 py-2 rounded transition-colors"
+            className="btn-primary btn-lg"
           >
             Go to Home
           </button>
