@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --prism-bg: #0d1117;
+  --prism-surface: #161b22;
+  --prism-border: #21262d;
+  --prism-blue: #3b82f6;
+  --prism-green: #22c55e;
+  --prism-red: #ef4444;
+  --prism-yellow: #eab308;
+  --prism-text: #e6edf3;
+  --prism-text-muted: #8b949e;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-prism-bg: var(--prism-bg);
+  --color-prism-surface: var(--prism-surface);
+  --color-prism-border: var(--prism-border);
+  --color-prism-blue: var(--prism-blue);
+  --color-prism-green: var(--prism-green);
+  --color-prism-red: var(--prism-red);
+  --color-prism-yellow: var(--prism-yellow);
+  --color-prism-text: var(--prism-text);
+  --color-prism-text-muted: var(--prism-text-muted);
+  --font-sans:
+    Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono:
+    "JetBrains Mono", "Fira Code", "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  border-color: var(--prism-border);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background: var(--prism-bg);
+  color: var(--prism-text);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
