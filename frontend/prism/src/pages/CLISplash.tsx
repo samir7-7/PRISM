@@ -46,10 +46,10 @@ export const CLISplash = () => {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <h1 className="text-6xl font-bold font-mono text-prism-text mb-4">
+        <h1 className="text-display font-mono text-prism-text mb-4">
           PRISM
         </h1>
-        <p className="text-prism-text-muted text-lg">
+        <p className="text-body-lg text-prism-text-muted">
           Predictive Risk Intelligence & Semantic Monitoring
         </p>
       </motion.div>
@@ -63,7 +63,7 @@ export const CLISplash = () => {
         >
           <form onSubmit={handleAnalyze} className="card p-8 space-y-6">
             <div>
-              <label className="block text-prism-text text-sm font-medium mb-2">
+              <label className="label">
                 Pull Request ID
               </label>
               <input
@@ -71,13 +71,13 @@ export const CLISplash = () => {
                 value={prId}
                 onChange={(e) => setPrId(e.target.value)}
                 placeholder="e.g., 123"
-                className="w-full bg-prism-bg border border-prism-border rounded px-4 py-2 text-prism-text focus:outline-none focus:border-prism-blue"
+                className="input focus-ring"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-prism-text text-sm font-medium mb-2">
+              <label className="label">
                 Repository
               </label>
               <input
@@ -85,17 +85,17 @@ export const CLISplash = () => {
                 value={repository}
                 onChange={(e) => setRepository(e.target.value)}
                 placeholder="e.g., owner/repo"
-                className="w-full bg-prism-bg border border-prism-border rounded px-4 py-2 text-prism-text focus:outline-none focus:border-prism-blue"
+                className="input focus-ring"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full bg-prism-blue hover:bg-prism-blue/80 text-white font-medium py-3 rounded transition-colors flex items-center justify-center gap-2"
+              className="btn-primary btn-lg w-full flex items-center justify-center gap-2"
             >
               Analyze Pull Request
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-5 h-5" />
             </button>
           </form>
         </motion.div>

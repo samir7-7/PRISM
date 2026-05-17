@@ -16,11 +16,9 @@ export const Sidebar = () => {
   const { currentAnalysis } = useAnalysisStore();
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'DASHBOARD', path: '/dashboard', enabled: true },
-    { icon: GitBranch, label: 'SEMANTIC TREE', path: '/dashboard/semantic', enabled: false },
-    { icon: AlertTriangle, label: 'RISK ANALYSIS', path: '/dashboard/risks', enabled: false },
-    { icon: FlaskConical, label: 'TESTS', path: '/dashboard/tests', enabled: true },
-    { icon: FileText, label: 'LOGS', path: '/dashboard/logs', enabled: false },
+    { icon: GitBranch, label: 'DEPENDENCY GRAPH', path: '/dashboard', enabled: true },
+    { icon: AlertTriangle, label: 'RISK ANALYSIS', path: '/dashboard/risk-analysis', enabled: true },
+    { icon: FlaskConical, label: 'TEST SCENARIOS', path: '/dashboard/tests', enabled: true },
   ];
 
   const bottomItems = [
@@ -29,22 +27,22 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className="w-56 bg-prism-surface border-r border-prism-border flex flex-col">
+    <aside className="w-64 bg-prism-surface border-r border-prism-border flex flex-col">
       {/* PR Info */}
       {currentAnalysis && (
         <div className="p-4 border-b border-prism-border">
-          <div className="text-xs text-prism-text-muted mb-1">PULL REQUEST</div>
-          <div className="text-sm font-mono text-prism-text font-semibold">
+          <div className="text-overline text-prism-text-muted mb-2">PULL REQUEST</div>
+          <div className="text-body font-mono text-prism-text font-semibold">
             #{currentAnalysis.pr_id}
           </div>
-          <div className="text-xs text-prism-text-muted mt-1 truncate">
+          <div className="text-caption text-prism-text-muted mt-1 truncate" title={currentAnalysis.repository}>
             {currentAnalysis.repository}
           </div>
         </div>
       )}
 
       {/* Main Navigation */}
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto custom-scrollbar">
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -55,18 +53,18 @@ export const Sidebar = () => {
                 key={item.path}
                 onClick={() => item.enabled && navigate(item.path)}
                 disabled={!item.enabled}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded text-body-sm transition-all focus-ring ${
                   !item.enabled
-                    ? 'text-prism-text-muted/50 cursor-not-allowed'
+                    ? 'text-prism-text-muted/50 cursor-not-allowed opacity-60'
                     : isActive
-                    ? 'bg-prism-blue/20 text-prism-blue'
+                    ? 'bg-prism-blue/20 text-prism-blue font-semibold'
                     : 'text-prism-text-muted hover:text-prism-text hover:bg-prism-bg'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 flex-shrink-0" />
                 <span className="font-medium tracking-wide">{item.label}</span>
                 {!item.enabled && (
-                  <span className="ml-auto text-xs text-prism-text-muted/50">Soon</span>
+                  <span className="ml-auto text-caption text-prism-text-muted/50">Soon</span>
                 )}
               </button>
             );
@@ -83,9 +81,9 @@ export const Sidebar = () => {
             <button
               key={item.label}
               onClick={() => item.path !== '#' && navigate(item.path)}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded text-sm text-prism-text-muted hover:text-prism-text hover:bg-prism-bg transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded text-body-sm text-prism-text-muted hover:text-prism-text hover:bg-prism-bg transition-all focus-ring"
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 flex-shrink-0" />
               <span className="font-medium tracking-wide">{item.label}</span>
             </button>
           );

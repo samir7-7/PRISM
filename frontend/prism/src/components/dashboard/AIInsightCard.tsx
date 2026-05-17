@@ -1,5 +1,6 @@
 import { Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { MarkdownRenderer } from '../common/MarkdownRenderer';
 
 interface AIInsightCardProps {
   insights: string;
@@ -26,23 +27,23 @@ export const AIInsightCard = ({ insights }: AIInsightCardProps) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Bot className="w-5 h-5 text-prism-blue" />
-          <h3 className="text-sm font-semibold text-prism-text">AI Analysis</h3>
+          <h3 className="text-h5 text-prism-text">AI Analysis</h3>
         </div>
-        <span className="badge-info">AI INSIGHT</span>
+        <span className="badge badge-info">AI INSIGHT</span>
       </div>
 
-      {/* Content */}
-      <div className="text-sm text-prism-text-muted leading-relaxed mb-4">
-        {cleanInsights || insights}
+      {/* Content with Markdown Support */}
+      <div className="mb-4">
+        <MarkdownRenderer content={cleanInsights || insights} />
       </div>
 
       {/* Tags */}
       {hashtags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-3 border-t border-prism-border">
           {hashtags.map((tag, index) => (
             <span
               key={index}
-              className="text-xs px-2 py-1 rounded bg-prism-blue/10 text-prism-blue border border-prism-blue/30 font-mono"
+              className="text-caption px-2.5 py-1 rounded bg-prism-blue/10 text-prism-blue border border-prism-blue/30 font-mono"
             >
               {tag}
             </span>

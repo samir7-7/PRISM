@@ -12,12 +12,12 @@ const StatCard = ({ label, value, valueColor = 'text-prism-text', delay = 0 }: S
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="card p-6"
+    className="card p-6 hover:shadow-lg transition-shadow"
   >
-    <div className="text-xs text-prism-text-muted uppercase tracking-wider mb-2">
+    <div className="text-overline text-prism-text-muted mb-3">
       {label}
     </div>
-    <div className={`text-3xl font-bold ${valueColor}`}>
+    <div className={`text-h2 ${valueColor}`}>
       {value}
     </div>
   </motion.div>
@@ -29,26 +29,26 @@ interface StatsRowProps {
   analysisDuration: number;
 }
 
-export const StatsRow = ({ 
-  impactedNodes, 
-  regressionScenarios, 
-  analysisDuration 
+export const StatsRow = ({
+  impactedNodes,
+  regressionScenarios,
+  analysisDuration
 }: StatsRowProps) => {
   return (
-    <div className="grid grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       <StatCard
         label="IMPACTED NODES"
-        value={`${impactedNodes} COMPONENTS AFFECTED`}
+        value={`${impactedNodes} Components`}
         delay={0.1}
       />
       <StatCard
         label="REGRESSION SCENARIOS"
-        value={`${regressionScenarios} GENERATED`}
+        value={`${regressionScenarios} Generated`}
         delay={0.2}
       />
       <StatCard
         label="ANALYSIS TIME"
-        value={`${analysisDuration.toFixed(1)}s DURATION`}
+        value={`${analysisDuration.toFixed(1)}s`}
         valueColor="text-prism-green"
         delay={0.3}
       />
