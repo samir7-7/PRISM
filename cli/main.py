@@ -25,6 +25,7 @@ from .formatter import (
     with_progress,
 )
 from .utils import detect_git_remote
+from typing import Optional
 
 app = typer.Typer(
     name="prism",
@@ -40,7 +41,7 @@ app = typer.Typer(
 @app.command()
 def analyze(
     pr_id: str = typer.Argument(..., metavar="PR_ID", help="PR identifier, e.g. pr-142 or 142."),
-    repo: str | None = typer.Option(
+    repo: Optional[str] = typer.Option(
         None,
         "--repo",
         help="Repository URL (overrides PRISM_REPO_URL).",
@@ -50,12 +51,12 @@ def analyze(
         "--open",
         help="Open the dashboard in the default browser after analysis.",
     ),
-    backend: str | None = typer.Option(
+    backend: Optional[str] = typer.Option(
         None,
         "--backend",
         help="Backend URL (overrides PRISM_BACKEND_URL).",
     ),
-    token: str | None = typer.Option(
+    token: Optional[str] = typer.Option(
         None,
         "--token",
         help="GitHub access token (overrides PRISM_GITHUB_TOKEN).",
@@ -105,7 +106,7 @@ def analyze(
                 ),
                 json_mode=settings.output_format == "json",
             )
-
+    assert settings.repo_url is not None
     _run(
         pr_identifier=pr_id,
         repository_url=settings.repo_url,
@@ -122,12 +123,12 @@ def analyze(
 # --------------------------------------------------------------------- #
 @app.command()
 def demo(
-    backend: str | None = typer.Option(
+    backend: Optional[str] = typer.Option(
         None,
         "--backend",
         help="Backend URL (overrides PRISM_BACKEND_URL).",
     ),
-    token: str | None = typer.Option(
+    token: Optional[str] = typer.Option(
         None,
         "--token",
         help="GitHub access token (rarely needed for demo mode).",
