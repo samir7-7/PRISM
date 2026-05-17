@@ -36,10 +36,10 @@ export const apiService = {
   },
 
   /**
-   * Get a specific report by ID
+   * Get a specific report by ID (string or number)
    * GET /api/reports/{report_id}
    */
-  getReport: async (reportId: number): Promise<ReportResponse> => {
+  getReport: async (reportId: string | number): Promise<ReportResponse> => {
     const response = await api.get<ReportResponse>(`/api/reports/${reportId}`);
     return response.data;
   },

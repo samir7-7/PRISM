@@ -54,7 +54,7 @@ async def analyze_pr_contract(
         
         # Generate deterministic report ID
         report_id = backend_analysis.make_report_id(request.pr_identifier, request.repository_url)
-        dashboard_url = f"http://localhost:3000/report/{report_id}"
+        dashboard_url = f"http://localhost:5173/report/{report_id}"
         
         # Store results in database
         repo = ReportRepository(db)
@@ -92,7 +92,7 @@ async def analyze_pr_contract(
         
         # Generate fallback report ID and dashboard URL
         report_id = backend_analysis.make_report_id(request.pr_identifier, request.repository_url)
-        dashboard_url = f"http://localhost:3000/report/{report_id}"
+        dashboard_url = f"http://localhost:5173/report/{report_id}"
         
         response = AnalysisResponse(
             report_id=report_id,

@@ -16,11 +16,11 @@ export const Sidebar = () => {
   const { currentAnalysis } = useAnalysisStore();
 
   const navItems = [
-    { icon: LayoutDashboard, label: 'DASHBOARD', path: '/dashboard' },
-    { icon: GitBranch, label: 'SEMANTIC TREE', path: '/dashboard' },
-    { icon: AlertTriangle, label: 'RISK ANALYSIS', path: '/dashboard' },
-    { icon: FlaskConical, label: 'TESTS', path: '/dashboard/tests' },
-    { icon: FileText, label: 'LOGS', path: '/dashboard' },
+    { icon: LayoutDashboard, label: 'DASHBOARD', path: '/dashboard', enabled: true },
+    { icon: GitBranch, label: 'SEMANTIC TREE', path: '/dashboard/semantic', enabled: false },
+    { icon: AlertTriangle, label: 'RISK ANALYSIS', path: '/dashboard/risks', enabled: false },
+    { icon: FlaskConical, label: 'TESTS', path: '/dashboard/tests', enabled: true },
+    { icon: FileText, label: 'LOGS', path: '/dashboard/logs', enabled: false },
   ];
 
   const bottomItems = [
@@ -53,15 +53,21 @@ export const Sidebar = () => {
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
+                onClick={() => item.enabled && navigate(item.path)}
+                disabled={!item.enabled}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors ${
-                  isActive
+                  !item.enabled
+                    ? 'text-prism-text-muted/50 cursor-not-allowed'
+                    : isActive
                     ? 'bg-prism-blue/20 text-prism-blue'
                     : 'text-prism-text-muted hover:text-prism-text hover:bg-prism-bg'
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="font-medium tracking-wide">{item.label}</span>
+                {!item.enabled && (
+                  <span className="ml-auto text-xs text-prism-text-muted/50">Soon</span>
+                )}
               </button>
             );
           })}
