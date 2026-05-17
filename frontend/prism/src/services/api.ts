@@ -2,6 +2,8 @@ import axios from 'axios';
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
+  AnalysisRunRequest,
+  AnalysisRunResponse,
   ReportResponse,
   ReportListResponse,
   StatsResponse,
@@ -27,7 +29,16 @@ api.interceptors.response.use(
 
 export const apiService = {
   /**
-   * Analyze a pull request
+   * Run analysis via CLI contract endpoint (canonical)
+   * POST /api/analysis/run
+   */
+  runAnalysis: async (data: AnalysisRunRequest): Promise<AnalysisRunResponse> => {
+    const response = await api.post<AnalysisRunResponse>('/api/analysis/run', data);
+    return response.data;
+  },
+
+  /**
+   * Analyze a pull request (legacy endpoint - deprecated)
    * POST /api/analyze
    */
   analyzePR: async (data: AnalyzeRequest): Promise<AnalyzeResponse> => {
@@ -36,10 +47,10 @@ export const apiService = {
   },
 
   /**
-   * Get a specific report by ID
+   * Get a specific report by ID (accepts both string and number)
    * GET /api/reports/{report_id}
    */
-  getReport: async (reportId: number): Promise<ReportResponse> => {
+  getReport: async (reportId: string | number): Promise<ReportResponse> => {
     const response = await api.get<ReportResponse>(`/api/reports/${reportId}`);
     return response.data;
   },
