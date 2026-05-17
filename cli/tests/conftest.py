@@ -26,7 +26,7 @@ def mock_analysis_response():
 
 @pytest.fixture
 def mock_partial_response():
-    """Create a mock partial analysis response (IBM Bob unavailable)."""
+    """Create a mock partial analysis response (AI service unavailable)."""
     return AnalysisResponse(
         report_id="test-report-456",
         dashboard_url="http://localhost:3000/report/test-report-456",

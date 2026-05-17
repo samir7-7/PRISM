@@ -147,7 +147,7 @@ def main():
     print("\n[OK] Basic API endpoints are working!")
     print("\n[INFO] To test analysis endpoints, you need:")
     print("      1. Valid GitHub token in .env")
-    print("      2. Valid IBM watsonx.ai credentials in .env")
+    print("      2. Valid OpenRouter credentials in .env")
     print("      3. Run: python test_api.py")
     print("\n[INFO] Interactive documentation:")
     print(f"      - Swagger UI: {BASE_URL}/docs")

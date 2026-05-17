@@ -22,11 +22,10 @@ class Settings(BaseSettings):
     github_token: str = ""
     github_api_url: str = "https://api.github.com"
     
-    # IBM watsonx.ai Configuration
-    ibm_bob_api_key: str = ""
-    ibm_bob_api_url: str = "https://us-south.ml.cloud.ibm.com"
-    ibm_bob_project_id: str = ""
-    ibm_bob_model_id: str = "ibm/granite-13b-chat-v2"
+    # OpenRouter Configuration
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    openrouter_model_id: str = "minimax/minimax-m2.5:free"
     
     # Database Configuration
     database_url: str = "sqlite:///./prism.db"

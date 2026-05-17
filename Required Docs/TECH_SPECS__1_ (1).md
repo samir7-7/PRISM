@@ -477,7 +477,7 @@ This is a two-service deployment (FastAPI backend + Vercel frontend) that can be
 All sensitive values go in a `.env` file that is never committed. An `.env.example` file documents what is needed:
 
 Backend:
-- `IBM_BOB_API_KEY`
+- `OPENROUTER_API_KEY`
 - `GITHUB_TOKEN` (optional, for private repos)
 - `BACKEND_URL`
 - `FIREBASE_PROJECT_ID`

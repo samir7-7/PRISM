@@ -113,7 +113,7 @@ Implementation: `httpx.Client` with the configured timeout, POSTs JSON to `{back
 
 **`cli/formatter.py`** — All Rich rendering lives here. Three public functions:
 
-- `with_progress(stages: list[str]) -> ContextManager` — yields a `rich.progress.Progress` context the client uses to advance through stages (`"Fetching PR diff"`, `"Building dependency graph"`, `"Calling IBM Bob"`, `"Computing risk score"`, `"Generating regressions"`). Stages are _fake_ — they advance on a timer because the backend is one synchronous POST. This is honest demo theatre: each label corresponds to a real backend stage, and the cumulative timer is bounded by the actual response. If we want true progress later, swap to SSE without changing the CLI's public surface.
+- `with_progress(stages: list[str]) -> ContextManager` — yields a `rich.progress.Progress` context the client uses to advance through stages (`"Fetching PR diff"`, `"Building dependency graph"`, `"Calling AI for semantic reasoning"`, `"Computing risk score"`, `"Generating regressions"`). Stages are _fake_ — they advance on a timer because the backend is one synchronous POST. This is honest demo theatre: each label corresponds to a real backend stage, and the cumulative timer is bounded by the actual response. If we want true progress later, swap to SSE without changing the CLI's public surface.
 - `render_summary(response: AnalysisResponse)` — prints the summary panel (see Output spec below).
 - `render_error(err: PrismError)` — prints a red boxed error with a one-line cause and a suggested fix.
 
@@ -558,7 +558,7 @@ $ prism demo
 Spinner → summary → dashboard auto-opens. Everyone is impressed in under 20 seconds. You haven't even introduced yourself yet.
 
 **7.2 — Demo failover mid-pitch**
-You started with `prism analyze pr-142 --open` (the "realistic" flow) and it stalled — IBM Bob is slow, or Wi-Fi flaked. Without missing a beat:
+You started with `prism analyze pr-142 --open` (the "realistic" flow) and it stalled — AI service is slow, or Wi-Fi flaked. Without missing a beat:
 
 ```
 $ prism demo
@@ -612,7 +612,7 @@ analyze(
 )
 ```
 
-The backend recognizes `pr-142` from this specific repo and returns a pre-baked Firestore report instantly — no GitHub fetch, no IBM Bob call, no real AST parsing.
+The backend recognizes `pr-142` from this specific repo and returns a pre-baked Firestore report instantly — no GitHub fetch, no AI service call, no real AST parsing.
 
 ### Composability
 
@@ -873,7 +873,7 @@ Single check: is `backend_url` reachable? A 200ms `GET /healthz` ping with a 2s 
   ▸ http://localhost:3000/report/8sj2kd
 ```
 
-Implementation: Rich `Panel`, `Text` with style based on `risk_label`. Status is `PARTIAL` → add a yellow note `"IBM Bob unavailable — graph and score are still valid."` per the PRD's graceful-degradation requirement.
+Implementation: Rich `Panel`, `Text` with style based on `risk_label`. Status is `PARTIAL` → add a yellow note `"AI service unavailable — graph and score are still valid."` per the PRD's graceful-degradation requirement.
 
 ### Phase 5 — Post-render
 
@@ -902,7 +902,7 @@ $ prism analyze pr-142 --open
 ⠙ Parsing AST                             (1.2s)
 ⠹ Building dependency graph               (3.8s)
 ⠸ Traversing impact (2 hops)              (5.1s)
-⠼ Calling IBM Bob for semantic reasoning  (14.7s)
+⠼ Calling AI for semantic reasoning  (14.7s)
 ⠴ Computing risk score                    (15.0s)
 ⠦ Generating regression scenarios         (15.4s)
 ✓ Analysis complete                       (15.6s)
@@ -956,7 +956,7 @@ These are deliberate trade-offs that would be wrong in production but right here
 - **Fake stage progression on a timer**: the backend is a single synchronous POST; we don't have real per-stage events. The spinner labels are a UX shim. Honest because each stage corresponds to a real backend phase; replaceable later with SSE.
 - **Pre-flight `/healthz`**: backend must expose this. One-line FastAPI route — Track 1 owns it.
 - **No retries**: if the call fails, we want to _know_ immediately and rerun. Retries would mask a broken demo.
-- **`prism demo` exists**: this is the single most important resilience feature. If GitHub rate-limits us, if IBM Bob is slow, if the network drops — `prism demo` is hardcoded to call the backend with a PR identifier that the backend recognises and returns a baked Firestore report for. Live demos die on flaky networks; this is the parachute.
+- **`prism demo` exists**: this is the single most important resilience feature. If GitHub rate-limits us, if the AI service is slow, if the network drops — `prism demo` is hardcoded to call the backend with a PR identifier that the backend recognises and returns a baked Firestore report for. Live demos die on flaky networks; this is the parachute.
 - **`--json` undocumented but present**: keeps `--help` clean while giving a one-line answer to "could this run in CI?"
 - **No CLI-side caching**: every run is fresh. Cache complexity isn't worth it.
 - **Token via env var, not OS keychain**: hackathon. Document `.env` in the README and move on.

@@ -14,7 +14,7 @@ from backend.services.ast_analyzer import ASTAnalyzer, CodeElement
 from backend.services.graph_builder import GraphBuilder
 from backend.services.impact_traverser import ImpactTraverser
 from backend.services.risk_scorer import RiskScorer
-from backend.services.ibm_bob_client import IBMBobClient
+from backend.services.openrouter_client import OpenRouterClient
 from backend.services.regression_generator import RegressionGenerator
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class AnalysisPipeline:
         self.ast_analyzer = ASTAnalyzer()
         self.graph_builder = GraphBuilder()
         self.risk_scorer = RiskScorer()
-        self.ibm_client = IBMBobClient()
+        self.openrouter_client = OpenRouterClient()
         self.regression_generator = RegressionGenerator()
     
     async def analyze_pr(
@@ -109,8 +109,8 @@ class AnalysisPipeline:
                 changed_nodes
             )
             
-            # Step 7: Get semantic insights from IBM watsonx.ai
-            logger.info("Step 7: Getting semantic insights from IBM watsonx.ai")
+            # Step 7: Get semantic insights from OpenRouter
+            logger.info("Step 7: Getting semantic insights from OpenRouter")
             diff_summary = diff_parser.get_change_summary()
             impacted_component_names = [
                 graph.nodes[node].get('name', node) 
@@ -118,13 +118,13 @@ class AnalysisPipeline:
             ]
             
             try:
-                semantic_insights = await self.ibm_client.analyze_code_changes(
+                semantic_insights = await self.openrouter_client.analyze_code_changes(
                     diff_summary=str(diff_summary),
                     changed_files=changed_files,
                     impacted_components=impacted_component_names
                 )
             except Exception as e:
-                logger.error(f"IBM watsonx.ai analysis failed: {e}")
+                logger.error(f"OpenRouter analysis failed: {e}")
                 semantic_insights = "Semantic analysis unavailable. Please review changes manually."
             
             # Step 8: Generate regression test scenarios

@@ -70,7 +70,7 @@ ANALYSIS_STAGES: list[str] = [
     "Parsing AST",
     "Building dependency graph",
     "Traversing impact (2 hops)",
-    "Calling IBM Bob for semantic reasoning",
+    "Calling AI for semantic reasoning",
     "Computing risk score",
     "Generating regression scenarios",
 ]
@@ -196,7 +196,7 @@ def render_summary(response: AnalysisResponse) -> None:
     if response.status == "PARTIAL":
         console.print(
             Text(
-                f"  {GLYPH_WARN} IBM Bob unavailable - graph and score are still valid.",
+                f"  {GLYPH_WARN} AI service unavailable - graph and score are still valid.",
                 style="yellow",
             )
         )

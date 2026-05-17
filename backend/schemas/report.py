@@ -25,7 +25,7 @@ class ReportResponse(BaseModel):
     risk_level: str
     risk_factors: RiskFactors
     
-    # IBM Bob insights
+    # AI semantic insights
     semantic_insights: str
     
     # Regression scenarios

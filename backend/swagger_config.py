@@ -9,14 +9,14 @@ API_DESCRIPTION = """
 ## Predictive Risk Intelligence for Software Modifications
 
 PRISM provides semantic code analysis for pull requests using advanced AST parsing, 
-dependency graph construction, and AI-powered insights via IBM watsonx.ai.
+dependency graph construction, and AI-powered insights via OpenRouter.
 
 ### Key Features
 
 * 🔍 **Deep Code Analysis**: AST-based parsing of code changes
 * 🕸️ **Dependency Mapping**: Automatic dependency graph construction
 * ⚠️ **Risk Assessment**: Multi-factor risk scoring algorithm
-* 🤖 **AI Insights**: Semantic analysis powered by IBM watsonx.ai
+* 🤖 **AI Insights**: Semantic analysis powered by OpenRouter
 * 🧪 **Test Generation**: Automated regression test scenario creation
 * 📊 **Impact Analysis**: Identify all affected components
 
@@ -27,13 +27,13 @@ dependency graph construction, and AI-powered insights via IBM watsonx.ai.
 3. **Graph Building**: Construct dependency relationships
 4. **Impact Traversal**: Identify all affected nodes
 5. **Risk Scoring**: Calculate risk based on multiple factors
-6. **AI Insights**: Get semantic understanding from IBM watsonx.ai
+6. **AI Insights**: Get semantic understanding from OpenRouter
 7. **Test Generation**: Create regression test scenarios
 8. **Report Storage**: Save results to database
 
 ### Authentication
 
-Currently, the API uses GitHub tokens and IBM watsonx.ai API keys configured 
+Currently, the API uses GitHub tokens and OpenRouter API keys configured 
 via environment variables. No per-request authentication is required.
 
 ### Rate Limits

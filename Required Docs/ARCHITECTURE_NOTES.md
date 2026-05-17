@@ -96,7 +96,7 @@ The following endpoints exist but are not specified in TECH_SPEC:
 
 ### Retry Logic & Rate Limiting
 
-**IBM Bob (watsonx.ai) Client:**
+**OpenRouter Client:**
 - ✅ Retry logic implemented: 3 attempts with exponential backoff
 - ✅ Retries on: 429 (rate limit), 502 (bad gateway), 503 (service unavailable), timeouts
 - ✅ Backoff: 1s → 2s → 4s
@@ -239,7 +239,7 @@ The following test files exist but contain no tests:
 - **Concurrent Requests:** Limited by SQLite (single-writer)
 - **Large PRs:** No pagination, all files loaded into memory
 - **Graph Size:** NetworkX in-memory, no size limits enforced
-- **API Timeouts:** 60s for IBM Bob, 30s for GitHub (may be insufficient for large PRs)
+- **API Timeouts:** 60s for OpenRouter, 30s for GitHub (may be insufficient for large PRs)
 
 ### Optimization Opportunities
 
@@ -256,8 +256,8 @@ The following test files exist but contain no tests:
 
 **Backend:**
 ```
-IBM_BOB_API_KEY=<watsonx.ai API key>
-IBM_BOB_PROJECT_ID=<watsonx.ai project ID>
+OPENROUTER_API_KEY=<OpenRouter API key>
+OPENROUTER_MODEL_ID=minimax/minimax-m2.5:free
 GITHUB_TOKEN=<optional, for private repos>
 BACKEND_URL=http://localhost:8000
 ```
@@ -280,7 +280,7 @@ For reliable demo without external dependencies:
 prism demo
 ```
 
-This uses canned response, bypasses GitHub and IBM Bob APIs.
+This uses canned response, bypasses GitHub and OpenRouter APIs.
 
 ---
 

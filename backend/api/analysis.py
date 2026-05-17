@@ -31,7 +31,7 @@ async def analyze_pr_contract(
     - Builds dependency graph
     - Identifies impacted components
     - Calculates risk score
-    - Gets IBM Bob semantic insights
+    - Gets AI semantic insights
     - Generates regression scenarios
     
     Returns PARTIAL status on pipeline failures instead of 500 errors.
@@ -120,7 +120,7 @@ async def analyze_pr(
     3. Builds dependency graph
     4. Identifies impacted components
     5. Calculates risk score
-    6. Gets semantic insights from IBM watsonx.ai
+    6. Gets semantic insights from OpenRouter
     7. Generates regression test scenarios
     8. Stores results in database
     

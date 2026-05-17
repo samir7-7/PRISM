@@ -11,7 +11,7 @@ sqlalchemy==2.0.30                 # ORM (works with SQLite + PostgreSQL)
 alembic==1.13.1                    # DB migrations
 # psycopg2-binary==2.9.9             # PostgreSQL driver (commented out - not needed for SQLite)
 
-# ── HTTP client (GitHub API + IBM Bob API) ─────────────────────
+# ── HTTP client (GitHub API + OpenRouter API) ─────────────────────
 httpx==0.27.0                      # Async-friendly HTTP client
 
 # ── Static analysis ────────────────────────────────────────────

@@ -112,7 +112,7 @@ async def health_check():
         "database": "connected",
         "services": {
             "github_api": "configured",
-            "ibm_watsonx": "configured",
+            "openrouter": "configured",
             "ast_analyzer": "ready",
             "graph_builder": "ready",
             "impact_traverser": "ready",
@@ -140,7 +140,7 @@ async def api_info():
             "Dependency graph construction",
             "Impact analysis and traversal",
             "Multi-factor risk scoring",
-            "AI-powered semantic insights via IBM watsonx.ai",
+            "AI-powered semantic insights via OpenRouter",
             "Automated regression test scenario generation",
             "Report storage and retrieval"
         ],

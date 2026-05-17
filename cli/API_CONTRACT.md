@@ -190,7 +190,7 @@ interface AnalysisResponse {
 | `impacted_node_count` | number | Number of code nodes affected by this PR                                |
 | `status`              | enum   | COMPLETE = full analysis, PARTIAL = some services unavailable           |
 
-**Response Time:** 15-30 seconds (includes AST parsing, graph building, IBM Bob calls)
+**Response Time:** 15-30 seconds (includes AST parsing, graph building, AI service calls)
 
 #### Status Codes
 
@@ -234,12 +234,12 @@ Range: 0-100
 | Status   | Meaning                                      | CLI Behavior                   |
 | -------- | -------------------------------------------- | ------------------------------ |
 | COMPLETE | All services succeeded                       | Show full summary              |
-| PARTIAL  | Some services failed (e.g., IBM Bob timeout) | Show summary with warning note |
+| PARTIAL  | Some services failed (e.g., AI service timeout) | Show summary with warning note |
 
 **PARTIAL Status Example:**
 
 ```
-⚠ IBM Bob unavailable — graph and score are still valid.
+⚠ AI service unavailable — graph and score are still valid.
 ```
 
 ---
@@ -379,7 +379,7 @@ curl -X POST http://localhost:8000/api/analysis/run \
 }
 ```
 
-### Example 2: Partial Analysis (IBM Bob Unavailable)
+### Example 2: Partial Analysis (AI Service Unavailable)
 
 **Request:** Same as Example 1
 
@@ -399,7 +399,7 @@ curl -X POST http://localhost:8000/api/analysis/run \
 **CLI Output:**
 
 ```
-⚠ IBM Bob unavailable — graph and score are still valid.
+⚠ AI service unavailable — graph and score are still valid.
 ```
 
 ### Example 3: Authentication Error
@@ -578,7 +578,7 @@ For backend developers implementing this API:
 - [ ] Validate request schema with Pydantic
 - [ ] Handle GitHub API authentication
 - [ ] Fetch PR diff from GitHub
-- [ ] Run analysis pipeline (AST, graph, IBM Bob, risk scoring)
+- [ ] Run analysis pipeline (AST, graph, AI service, risk scoring)
 - [ ] Generate report ID and dashboard URL
 - [ ] Return response matching schema exactly
 - [ ] Handle errors gracefully with clear messages

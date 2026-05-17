@@ -90,7 +90,7 @@ class AnalyzeResponse(BaseModel):
     risk_level: str = Field(..., description="Risk level: LOW, MEDIUM, HIGH")
     risk_factors: RiskFactors
     
-    # IBM Bob insights
+    # AI semantic insights
     semantic_insights: str
     
     # Regression scenarios

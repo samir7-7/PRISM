@@ -73,7 +73,7 @@ def test_render_summary_warns_on_partial_status():
         status="PARTIAL",
     )
     output = _render(formatter.render_summary, response)
-    assert "IBM Bob unavailable" in output
+    assert "AI service unavailable" in output
 
 
 def test_render_summary_singular_impacted_node():

@@ -31,8 +31,8 @@ class AnalysisReport(Base):
     risk_level = Column(String(20))  # LOW, MEDIUM, HIGH, CRITICAL
     risk_factors = Column(Text)  # JSON object with risk breakdown
     
-    # IBM Bob Analysis
-    semantic_insights = Column(Text)  # IBM Bob's analysis text
+    # AI Semantic Analysis
+    semantic_insights = Column(Text)  # AI model's analysis text
     
     # Regression Testing
     regression_scenarios = Column(Text)  # JSON array of test scenarios

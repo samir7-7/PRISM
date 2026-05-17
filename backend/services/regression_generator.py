@@ -27,7 +27,7 @@ class RegressionGenerator:
             changed_files: List of changed file paths
             impacted_nodes: List of impacted node IDs
             graph: Dependency graph
-            ibm_insights: Optional insights from IBM watsonx.ai
+            ai_insights: Optional insights from the AI model
             
         Returns:
             List of RegressionScenario objects
@@ -43,9 +43,9 @@ class RegressionGenerator:
         # Generate integration scenarios
         scenarios.extend(self._generate_integration_scenarios(changed_files, impacted_nodes, graph))
         
-        # Parse IBM insights for additional scenarios
+        # Parse AI insights for additional scenarios
         if ibm_insights:
-            scenarios.extend(self._parse_ibm_scenarios(ibm_insights))
+            scenarios.extend(self._parse_ai_scenarios(ibm_insights))
         
         # Prioritize scenarios
         scenarios = self._prioritize_scenarios(scenarios)
@@ -171,12 +171,12 @@ class RegressionGenerator:
         
         return scenarios
     
-    def _parse_ibm_scenarios(self, ibm_insights: str) -> List[RegressionScenario]:
-        """Parse IBM watsonx.ai insights for test scenarios."""
+    def _parse_ai_scenarios(self, ai_insights: str) -> List[RegressionScenario]:
+        """Parse AI model insights for test scenarios."""
         scenarios = []
-        
+
         # Simple parsing - look for numbered lists or bullet points
-        lines = ibm_insights.split('\n')
+        lines = ai_insights.split('\n')
         current_scenario = None
         
         for line in lines:

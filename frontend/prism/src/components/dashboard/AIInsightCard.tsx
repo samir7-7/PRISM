@@ -26,7 +26,7 @@ export const AIInsightCard = ({ insights }: AIInsightCardProps) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Bot className="w-5 h-5 text-prism-blue" />
-          <h3 className="text-sm font-semibold text-prism-text">IBM Bob Analysis</h3>
+          <h3 className="text-sm font-semibold text-prism-text">AI Analysis</h3>
         </div>
         <span className="badge-info">AI INSIGHT</span>
       </div>
