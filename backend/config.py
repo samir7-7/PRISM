@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     # OpenRouter Configuration
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    openrouter_model_id: str = "minimax/minimax-m2.5:free"
+    openrouter_model_id: str = "anthropic/claude-3.5-sonnet"
     
     # Database Configuration
     database_url: str = "sqlite:///./prism.db"
