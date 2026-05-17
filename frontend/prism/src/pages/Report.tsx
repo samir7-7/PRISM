@@ -22,7 +22,8 @@ export const Report = () => {
       setIsLoadingReport(true);
 
       try {
-        const report = await apiService.getReport(parseInt(id));
+        // Accept both string and numeric IDs
+        const report = await apiService.getReport(id);
         
         // Convert ReportResponse to AnalyzeResponse format
         const analysisData = {

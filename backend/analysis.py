@@ -15,7 +15,7 @@ from cli.demo_fixture import DEMO_PR_ID, DEMO_REPO_URL
 # Canned response for demo PR
 DEMO_RESPONSE = {
     "report_id": "demo8chr",
-    "dashboard_url": "http://localhost:3000/report/demo8chr",
+    "dashboard_url": "http://localhost:5173/report/demo8chr",
     "risk_score": 82,
     "risk_label": "HIGH",
     "impacted_node_count": 14,
@@ -146,7 +146,7 @@ async def analyze(
     
     # Generate report ID
     report_id = make_report_id(pr_id, repo_url)
-    dashboard_url = f"http://localhost:3000/report/{report_id}"
+    dashboard_url = f"http://localhost:5173/report/{report_id}"
     
     # Try to fetch PR files from GitHub
     try:
