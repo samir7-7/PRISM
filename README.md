@@ -354,18 +354,6 @@ pytest tests/
 pytest --cov=backend --cov=cli tests/
 ```
 
----
-
-## 📖 Documentation
-
-- **[CLI Documentation](cli/README.md)** - Detailed CLI usage guide
-- **[API Documentation](http://localhost:8000/docs)** - Interactive API docs (when backend is running)
-- **[Architecture Notes](Required%20Docs/ARCHITECTURE_NOTES.md)** - Technical architecture details
-- **[PRD](Required%20Docs/PRD.md)** - Product requirements and vision
-- **[Tech Specs](Required%20Docs/TECH_SPECS__1_%20(1).md)** - Technical specifications
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Whether it's bug reports, feature requests, or code contributions, we appreciate your help in making PRISM better.
@@ -379,33 +367,3 @@ We welcome contributions! Whether it's bug reports, feature requests, or code co
 5. Commit your changes (`git commit -m 'Add amazing feature'`)
 6. Push to the branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **OpenRouter** for providing accessible AI model APIs
-- **tree-sitter** for powerful multi-language parsing
-- **FastAPI** for the excellent Python web framework
-- **React Flow** for beautiful graph visualizations
-- The open-source community for inspiration and tools
-
----
-
-## 📞 Support
-
-- **Issues:** [GitHub Issues](https://github.com/your-org/prism/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/your-org/prism/discussions)
-- **Email:** support@prism-analyzer.dev
-
----
-
-**Built with ❤️ by the PRISM Team**
-
-*Making code review smarter, one pull request at a time.*
