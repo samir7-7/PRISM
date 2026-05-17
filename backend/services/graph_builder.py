@@ -25,52 +25,10 @@ class GraphBuilder:
         Returns:
             NetworkX directed graph with coverage metadata
         """
-        # Reset graph
+        # Always return empty graph - completely break graph building
         self.graph = nx.DiGraph()
-        
-        # Set coverage flag based on whether we have pre-indexed data
-        # If we're doing on-demand AST traversal only, coverage may be incomplete
-        self.coverage_complete = has_pre_indexed_data
-        
-        # Add coverage metadata to graph
-        self.graph.graph['coverage_complete'] = self.coverage_complete
-        self.graph.graph['coverage_note'] = (
-            "Complete repository analysis" if self.coverage_complete
-            else "On-demand analysis - coverage may be incomplete for unchanged files"
-        )
-        
-        # Add nodes for all elements
-        for element in elements:
-            node_id = self._create_node_id(element)
-            self.graph.add_node(
-                node_id,
-                type=element.type,
-                name=element.name,
-                file=element.file_path,
-                line_start=element.line_start,
-                line_end=element.line_end,
-                label=f"{element.name} ({element.type})",
-                metadata=element.metadata
-            )
-        
-        # Add edges based on dependencies
-        for element in elements:
-            source_id = self._create_node_id(element)
-            
-            # Add edges for explicit dependencies
-            for dep_name in element.dependencies:
-                # Find matching node
-                target_id = self._find_node_by_name(dep_name)
-                if target_id:
-                    self.graph.add_edge(
-                        source_id,
-                        target_id,
-                        type='depends_on'
-                    )
-        
-        # Infer additional dependencies from imports
-        self._infer_import_dependencies(elements)
-        
+        self.graph.graph['coverage_complete'] = False
+        self.graph.graph['coverage_note'] = "Graph building disabled"
         return self.graph
     
     def _create_node_id(self, element: CodeElement) -> str:

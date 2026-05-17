@@ -17,13 +17,30 @@ export interface RegressionScenario {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
+// Legacy endpoint request (POST /api/analyze) - deprecated
 export interface AnalyzeRequest {
   pr_id: string;
   repository: string;
 }
 
+// CLI contract types (POST /api/analysis/run) - canonical endpoint
+export interface AnalysisRunRequest {
+  pr_identifier: string;
+  repository_url: string;
+  github_token?: string;
+}
+
+export interface AnalysisRunResponse {
+  report_id: string;
+  dashboard_url: string;
+  risk_score: number;
+  risk_label: 'LOW' | 'MEDIUM' | 'HIGH';
+  impacted_node_count: number;
+  status: 'COMPLETE' | 'PARTIAL';
+}
+
 export interface AnalyzeResponse {
-  report_id: number;
+  report_id: string;
   pr_id: string;
   repository: string;
   pr_url?: string;
@@ -40,6 +57,7 @@ export interface AnalyzeResponse {
 
 export interface ReportResponse {
   id: number;
+  report_id?: string;
   pr_id: string;
   repository: string;
   pr_url?: string;
@@ -59,6 +77,7 @@ export interface ReportResponse {
 
 export interface ReportListItem {
   id: number;
+  report_id?: string;
   pr_id: string;
   repository: string;
   risk_score: number;

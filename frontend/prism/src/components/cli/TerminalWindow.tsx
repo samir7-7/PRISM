@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface TerminalWindowProps {
   prId: string;
   repository: string;
-  reportId?: number;
+  reportId?: string;
   riskScore?: number;
   riskLevel?: string;
   impactedNodes?: number;
@@ -28,11 +28,19 @@ export const TerminalWindow = ({
   const navigate = useNavigate();
 
   const steps = [
-    { icon: '✅', text: 'Pull request analyzed', delay: 500 },
-    { icon: '✅', text: 'Dependency graph constructed', delay: 800 },
-    { icon: '✅', text: `${impactedNodes} impacted nodes identified`, delay: 1000 },
-    { icon: '⚠️', text: `${semanticRisks} semantic risks detected`, delay: 1200 },
-    { icon: '✅', text: 'Regression scenarios generated', delay: 1500 },
+    { icon: "✅", text: "Pull request analyzed", delay: 500 },
+    { icon: "✅", text: "Dependency graph constructed", delay: 800 },
+    {
+      icon: "✅",
+      text: `${impactedNodes} impacted nodes identified`,
+      delay: 1000,
+    },
+    {
+      icon: "⚠️",
+      text: `${semanticRisks} semantic risks detected`,
+      delay: 1200,
+    },
+    { icon: "✅", text: "Regression scenarios generated", delay: 1500 },
   ];
 
   useEffect(() => {
@@ -48,16 +56,16 @@ export const TerminalWindow = ({
 
   const getRiskColor = (level?: string) => {
     switch (level?.toUpperCase()) {
-      case 'CRITICAL':
-        return 'text-prism-red';
-      case 'HIGH':
-        return 'text-prism-orange';
-      case 'MEDIUM':
-        return 'text-prism-yellow';
-      case 'LOW':
-        return 'text-prism-green';
+      case "CRITICAL":
+        return "text-prism-red";
+      case "HIGH":
+        return "text-prism-orange";
+      case "MEDIUM":
+        return "text-prism-yellow";
+      case "LOW":
+        return "text-prism-green";
       default:
-        return 'text-prism-text';
+        return "text-prism-text";
     }
   };
 
@@ -88,9 +96,10 @@ export const TerminalWindow = ({
             animate={{ opacity: 1 }}
             className="mb-4"
           >
-            <span className="text-prism-green">$</span>{' '}
+            <span className="text-prism-green">$</span>{" "}
             <span className="text-prism-text">
-              prism analyze pull-request --id={prId} --repository={repository} --verbose
+              prism analyze pull-request --id={prId} --repository={repository}{" "}
+              --verbose
             </span>
           </motion.div>
 
@@ -121,10 +130,14 @@ export const TerminalWindow = ({
               className="space-y-4"
             >
               <div className="border-t border-prism-border pt-4">
-                <div className="text-prism-text-muted mb-2">ANALYSIS SUMMARY</div>
+                <div className="text-prism-text-muted mb-2">
+                  ANALYSIS SUMMARY
+                </div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-prism-text">Risk Score:</span>
-                  <span className={`text-2xl font-bold ${getRiskColor(riskLevel)}`}>
+                  <span
+                    className={`text-2xl font-bold ${getRiskColor(riskLevel)}`}
+                  >
                     {riskLevel?.toUpperCase()}
                   </span>
                   <span className="text-prism-text-muted">

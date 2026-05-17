@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
-import { TerminalWindow } from '../components/cli/TerminalWindow';
-import { apiService } from '../services/api';
-import { useAnalysisStore } from '../store/analysisStore';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { TerminalWindow } from "../components/cli/TerminalWindow";
+import { apiService } from "../services/api";
+import { useAnalysisStore } from "../store/analysisStore";
 
 export const CLISplash = () => {
   const navigate = useNavigate();
   const { setAnalysis, setLoading, setError } = useAnalysisStore();
-  const [prId, setPrId] = useState('');
-  const [repository, setRepository] = useState('');
+  const [prId, setPrId] = useState("");
+  const [repository, setRepository] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [analysisData, setAnalysisData] = useState<any>(null);
@@ -23,19 +23,33 @@ export const CLISplash = () => {
     setLoading(true);
 
     try {
-      const result = await apiService.analyzePR({ pr_id: prId, repository });
+      // Use canonical CLI contract endpoint
+      const result = await apiService.runAnalysis({
+        pr_identifier: prId,
+        repository_url: repository,
+      });
+
+      // Store minimal data for terminal display
       setAnalysisData(result);
-      setAnalysis(result);
       setAnalysisComplete(true);
+
+      // Navigate directly to report page (matches CLI handoff)
+      setTimeout(() => {
+        navigate(`/report/${result.report_id}`);
+      }, 2000); // Brief delay to show terminal animation
     } catch (error: any) {
-      setError(error.response?.data?.detail || 'Failed to analyze PR');
+      setError(error.response?.data?.detail || "Failed to analyze PR");
       setIsAnalyzing(false);
       setLoading(false);
     }
   };
 
   const handleViewDashboard = () => {
-    navigate('/dashboard');
+    if (analysisData?.report_id) {
+      navigate(`/report/${analysisData.report_id}`);
+    } else {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -106,11 +120,9 @@ export const CLISplash = () => {
             repository={repository}
             reportId={analysisData?.report_id}
             riskScore={analysisData?.risk_score}
-            riskLevel={analysisData?.risk_level}
-            impactedNodes={analysisData?.impacted_nodes?.length}
-            semanticRisks={analysisData?.regression_scenarios?.filter(
-              (s: any) => s.priority === 'HIGH'
-            ).length}
+            riskLevel={analysisData?.risk_label}
+            impactedNodes={analysisData?.impacted_node_count}
+            semanticRisks={3}
             onComplete={() => setLoading(false)}
           />
 

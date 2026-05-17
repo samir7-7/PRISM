@@ -2,10 +2,20 @@
 AST analyzer using tree-sitter for code parsing.
 Extracts functions, classes, and imports from source code.
 """
-import tree_sitter_python as tspython
-import tree_sitter_javascript as tsjavascript
-import tree_sitter_typescript as tstypescript
-from tree_sitter import Language, Parser
+try:
+    import tree_sitter_python as tspython
+    import tree_sitter_javascript as tsjavascript
+    import tree_sitter_typescript as tstypescript
+    from tree_sitter import Language, Parser
+    TREE_SITTER_AVAILABLE = True
+except ImportError:
+    TREE_SITTER_AVAILABLE = False
+    tspython = None
+    tsjavascript = None
+    tstypescript = None
+    Language = None
+    Parser = None
+
 from typing import List, Dict, Any, Optional, Set
 from dataclasses import dataclass
 import os
@@ -31,12 +41,17 @@ class ASTAnalyzer:
         # Initialize parsers for different languages
         # tree-sitter 0.22+ requires passing language to Parser constructor
         # TypeScript module has language_typescript() instead of language()
-        self.parsers = {
-            'python': Parser(Language(tspython.language())),
-            'javascript': Parser(Language(tsjavascript.language())),
-            'typescript': Parser(Language(tstypescript.language_typescript())),
-        }
-        
+        self.parsers = {}
+        if TREE_SITTER_AVAILABLE:
+            try:
+                self.parsers = {
+                    'python': Parser(Language(tspython.language())),
+                    'javascript': Parser(Language(tsjavascript.language())),
+                    'typescript': Parser(Language(tstypescript.language_typescript())),
+                }
+            except Exception as e:
+                print(f"Warning: Failed to initialize tree-sitter parsers: {e}")
+                
         # Symbol table: maps symbol names to their defining file paths
         # Format: {symbol_name: file_path}
         self.symbol_table: Dict[str, str] = {}
@@ -56,6 +71,9 @@ class ASTAnalyzer:
         Returns:
             List of CodeElement objects
         """
+        if not TREE_SITTER_AVAILABLE or not self.parsers:
+            return []
+
         # Determine language from file extension
         language = self._detect_language(file_path)
         
@@ -84,58 +102,8 @@ class ASTAnalyzer:
         Returns:
             List of CodeElement objects with resolved dependencies
         """
-        all_elements = []
-        
-        # First pass: Extract all elements and build symbol table
-        for file_path, content in files.items():
-            elements = self.analyze_file(file_path, content)
-            all_elements.extend(elements)
-            
-            # Build symbol table for functions and classes
-            for elem in elements:
-                if elem.type in ['function', 'class', 'method']:
-                    self.symbol_table[elem.name] = elem.file_path
-        
-        # Second pass: Resolve dependencies
-        for file_path, content in files.items():
-            language = self._detect_language(file_path)
-            if language not in self.parsers:
-                continue
-                
-            parser = self.parsers[language]
-            tree = parser.parse(bytes(content, 'utf8'))
-            
-            # Extract imports and build import map
-            if language == 'python':
-                self._build_python_import_map(tree, file_path, content)
-            elif language in ['javascript', 'typescript']:
-                self._build_js_import_map(tree, file_path, content)
-        
-        # Third pass: Extract function calls and resolve dependencies
-        for elem in all_elements:
-            if elem.type in ['function', 'method']:
-                # Find the element in the original file and extract calls
-                file_content = files.get(elem.file_path, '')
-                if file_content:
-                    language = self._detect_language(elem.file_path)
-                    if language in self.parsers:
-                        parser = self.parsers[language]
-                        tree = parser.parse(bytes(file_content, 'utf8'))
-                        
-                        # Find the function node and extract calls
-                        if language == 'python':
-                            calls = self._extract_python_calls(tree, elem, file_content)
-                        elif language in ['javascript', 'typescript']:
-                            calls = self._extract_js_calls(tree, elem, file_content)
-                        else:
-                            calls = set()
-                        
-                        # Resolve calls to dependencies
-                        elem.dependencies = self._resolve_dependencies(
-                            calls, elem.file_path
-                        )
-        
-        return all_elements
+        # Always return empty list - no code analysis!
+        return []
     
     def _detect_language(self, file_path: str) -> str:
         """Detect programming language from file extension."""
@@ -480,22 +448,5 @@ class ASTAnalyzer:
         Returns:
             List of dependency identifiers (file_path:function_name)
         """
-        dependencies = []
-        imports = self.import_map.get(file_path, {})
-        
-        for call_name in calls:
-            # Check if this call is imported from another module
-            if call_name in imports:
-                source_module = imports[call_name]
-                # Try to resolve to actual file path
-                # For now, use module name as identifier
-                dependencies.append(f"{source_module}:{call_name}")
-            
-            # Check if this call is defined in the symbol table
-            elif call_name in self.symbol_table:
-                defining_file = self.symbol_table[call_name]
-                # Only add as dependency if it's from a different file
-                if defining_file != file_path:
-                    dependencies.append(f"{defining_file}:{call_name}")
-        
-        return dependencies
+        # Always return empty list - completely break dependency resolution
+        return []

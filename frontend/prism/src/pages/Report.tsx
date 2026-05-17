@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
-import { useAnalysisStore } from '../store/analysisStore';
-import { Dashboard } from './Dashboard';
-import type { ReportResponse } from '../types';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { apiService } from "../services/api";
+import { useAnalysisStore } from "../store/analysisStore";
+import { Dashboard } from "./Dashboard";
+import type { ReportResponse } from "../types";
 
 export const Report = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +14,7 @@ export const Report = () => {
   useEffect(() => {
     const loadReport = async () => {
       if (!id) {
-        navigate('/');
+        navigate("/");
         return;
       }
 
@@ -22,11 +22,13 @@ export const Report = () => {
       setIsLoadingReport(true);
 
       try {
-        const report = await apiService.getReport(parseInt(id));
-        
+        // Pass ID as-is (string or number) - backend handles both
+        const report = await apiService.getReport(id);
+
         // Convert ReportResponse to AnalyzeResponse format
+        // Use report_id (string hash) if available, fallback to id (number)
         const analysisData = {
-          report_id: report.id,
+          report_id: report.report_id || String(report.id),
           pr_id: report.pr_id,
           repository: report.repository,
           pr_url: report.pr_url,
@@ -45,11 +47,17 @@ export const Report = () => {
         setIsLoadingReport(false);
         setLoading(false);
       } catch (error: any) {
-        console.error('Failed to load report:', error);
-        setError(error.response?.data?.detail || 'Failed to load report');
+        console.error("Failed to load report:", error);
+        const errorMessage =
+          error.response?.data?.detail || "Failed to load report";
+        setError(errorMessage);
         setIsLoadingReport(false);
         setLoading(false);
-        navigate('/');
+
+        // Only redirect on 404, not on transient errors
+        if (error.response?.status === 404) {
+          navigate("/");
+        }
       }
     };
 
