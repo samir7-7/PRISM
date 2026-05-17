@@ -146,7 +146,7 @@ export const TerminalWindow = ({
                     }}
                     className="text-prism-blue hover:text-prism-blue/80 flex items-center gap-2 break-all"
                   >
-                    http://localhost:3000/report/{reportId}
+                    {window.location.origin}/report/{reportId}
                     <ExternalLink className="w-4 h-4 flex-shrink-0" />
                   </a>
                 </div>

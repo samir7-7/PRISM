@@ -20,7 +20,8 @@ class ReportRepository:
     
     def _make_report_id(self, pr_id: str, repository: str) -> str:
         """Build a deterministic 8-char report_id from the request."""
-        digest = hashlib.sha1(f"{repository}#{pr_id}".encode()).hexdigest()
+        # FIXED: Use same format as backend/analysis.py to ensure ID consistency
+        digest = hashlib.sha1(f"{pr_id}:{repository}".encode()).hexdigest()
         return digest[:8]
     
     def create_report(self, analysis_result: dict) -> AnalysisReport:

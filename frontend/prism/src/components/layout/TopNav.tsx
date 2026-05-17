@@ -23,9 +23,16 @@ export const TopNav = () => {
       <div className="flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-8">
-          <h1 
+          <h1
             className="text-2xl font-bold font-mono text-prism-text cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => {
+              // Navigate to dashboard if on a dashboard route, otherwise go home
+              if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/report')) {
+                navigate('/dashboard');
+              } else {
+                navigate('/');
+              }
+            }}
           >
             PRISM
           </h1>
