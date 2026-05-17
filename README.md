@@ -25,12 +25,23 @@ Modern CI/CD pipelines are blind to **semantic risk**:
 **PRISM catches these issues before merge** by combining:
 - 🔬 **Static AST Analysis** - Deep code structure understanding
 - 🕸️ **Dependency Graph Traversal** - Impact radius mapping
-- 🤖 **AI-Powered Reasoning** - Natural language risk explanations via OpenRouter
+- 🤖 **AI-Powered Reasoning** - Natural language risk explanations powered by AI
 - 📊 **Interactive Visualization** - Clear, actionable insights
+
+> **Built with IBM Bob:** This entire project was architected, designed, and developed with the assistance of IBM Bob, IBM's AI coding assistant. Bob helped us rapidly prototype the analysis pipeline, design the dependency graph algorithms, and create the semantic reasoning layer that makes PRISM intelligent.
 
 ### Who We Are
 
 PRISM was built during a hackathon by a team passionate about improving developer workflows and preventing production incidents. We believe that every developer should have access to intelligent tooling that makes code review faster, safer, and more confident.
+
+**Powered by IBM Bob:** This project showcases the power of AI-assisted development. IBM Bob served as our technical co-pilot throughout the hackathon, helping us:
+- 🏗️ **Design the system architecture** - From monolithic backend to modular components
+- 🧠 **Implement complex algorithms** - Dependency graph traversal and risk scoring logic
+- 🐛 **Debug and optimize code** - Identifying edge cases and performance bottlenecks
+- 📝 **Write comprehensive documentation** - Technical specs, API contracts, and user guides
+- 🧪 **Generate test scenarios** - Unit tests and integration test strategies
+
+Bob's ability to understand context, suggest architectural patterns, and write production-quality code accelerated our development velocity by an order of magnitude.
 
 ---
 
