@@ -15,7 +15,7 @@ class RiskScorer:
             'complexity': 0.25,
             'impact_scope': 0.35,
             'criticality': 0.30,
-            'test_coverage': 0.10
+            'test_coverage': 0.20
         }
     
     def calculate_risk_score(
